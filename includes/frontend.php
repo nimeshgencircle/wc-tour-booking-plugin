@@ -1,0 +1,295 @@
+<?php
+/**
+ * Frontend
+ * Product page: tour info, date selector, Book Now / Waitlist / Inquiry buttons.
+ * Traveler form is now on the checkout page (checkout-travelers.js).
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+// ─── Enqueue assets ───────────────────────────────────────────────────────────
+add_action( 'wp_enqueue_scripts', 'wctb_enqueue_assets' );
+function wctb_enqueue_assets() {
+    if ( ! is_product() && ! is_checkout() ) return;
+
+    wp_enqueue_style( 'wctb-frontend', WCTB_URL . 'assets/css/frontend.css', [], WCTB_VERSION );
+
+    // ── Product page JS ──
+    if ( is_product() ) {
+        wp_enqueue_script( 'wctb-frontend', WCTB_URL . 'assets/js/frontend.js', [ 'jquery' ], WCTB_VERSION, true );
+
+        global $post;
+        $product_id  = $post->ID;
+        $dates_raw   = get_post_meta( $product_id, '_wctb_dates', true );
+        $dates       = $dates_raw ? json_decode( $dates_raw, true ) : [];
+        $available   = wctb_get_available_seats( $product_id );
+        $button_type = wctb_get_button_type( $product_id );
+
+        wp_localize_script( 'wctb-frontend', 'wctb_data', [
+            'ajax_url'        => admin_url( 'admin-ajax.php' ),
+            'product_id'      => $product_id,
+            'dates'           => $dates,
+            'available_seats' => $available,
+            'button_type'     => $button_type,
+            'cart_url'        => wc_get_cart_url(),
+            'checkout_url'    => wc_get_checkout_url(),
+            'waitlist_nonce'  => wp_create_nonce( 'wctb_waitlist_nonce' ),
+            'inquiry_nonce'   => wp_create_nonce( 'wctb_inquiry_nonce' ),
+            'i18n'            => [
+                'select_date'      => __( 'Please select a tour date to continue.', 'wc-tour-booking' ),
+                'adding'           => __( 'Adding to cart…', 'wc-tour-booking' ),
+                'error'            => __( 'Something went wrong. Please try again.', 'wc-tour-booking' ),
+                'fill_required'    => __( 'Please fill in all required fields.', 'wc-tour-booking' ),
+                'waitlist_success' => __( "You've been added to the waitlist!", 'wc-tour-booking' ),
+                'inquiry_success'  => __( 'Your inquiry has been sent!', 'wc-tour-booking' ),
+            ],
+        ] );
+    }
+
+    // ── Checkout page JS ──
+    if ( is_checkout() ) {
+        wp_enqueue_script( 'wctb-checkout', WCTB_URL . 'assets/js/checkout-travelers.js', [ 'jquery' ], WCTB_VERSION, true );
+
+        $tour_items = [];
+        foreach ( WC()->cart->get_cart() as $key => $item ) {
+            $pid = $item['product_id'];
+            if ( ! get_post_meta( $pid, '_wctb_dates', true ) ) continue;
+            $tour_items[] = [
+                'cart_key'     => $key,
+                'product_id'   => $pid,
+                'name'         => get_the_title( $pid ),
+                'base_price'   => (float) get_post_meta( $pid, '_wctb_base_price', true ),
+                'supplement'   => (float) get_post_meta( $pid, '_wctb_single_supplement', true ),
+                'room_enabled' => get_post_meta( $pid, '_wctb_enable_room_selection', true ) === 'yes',
+                'available'    => wctb_get_available_seats( $pid ),
+                'date'         => $item['wctb_selected_date'] ?? '',
+                'max_travelers'=> (int) get_option( 'wctb_max_travelers_per_booking', 10 ),
+            ];
+        }
+
+        wp_localize_script( 'wctb-checkout', 'wctb_checkout', [
+            'tour_items' => $tour_items,
+            'currency'   => get_option( 'wctb_currency_symbol', get_woocommerce_currency_symbol() ),
+            'ajax_url'   => admin_url( 'admin-ajax.php' ),
+            'i18n'       => [
+                'traveler'        => __( 'Traveler', 'wc-tour-booking' ),
+                'first_name'      => __( 'First Name', 'wc-tour-booking' ),
+                'last_name'       => __( 'Last Name', 'wc-tour-booking' ),
+                'email'           => __( 'Email Address', 'wc-tour-booking' ),
+                'phone'           => __( 'Phone Number', 'wc-tour-booking' ),
+                'age'             => __( 'Age', 'wc-tour-booking' ),
+                'room_pref'       => __( 'Room Preference', 'wc-tour-booking' ),
+                'shared_room'     => __( 'Shared Room', 'wc-tour-booking' ),
+                'single_room'     => __( 'Private Room', 'wc-tour-booking' ),
+                'num_travelers'   => __( 'Number of Travelers', 'wc-tour-booking' ),
+                'pricing_summary' => __( 'Pricing Summary', 'wc-tour-booking' ),
+                'per_person'      => __( 'per person', 'wc-tour-booking' ),
+                'supplement_note' => __( 'Private room supplement: ', 'wc-tour-booking' ),
+                'fill_required'   => __( 'Please complete all traveler details before placing your order.', 'wc-tour-booking' ),
+                'departure_date'  => __( 'Departure Date', 'wc-tour-booking' ),
+                'return_date'     => __( 'Return Date', 'wc-tour-booking' ),
+            ],
+        ] );
+    }
+}
+
+// ─── Product page: tour info block ────────────────────────────────────────────
+add_action( 'woocommerce_single_product_summary', 'wctb_display_tour_info', 25 );
+function wctb_display_tour_info() {
+    global $post;
+    $product_id = $post->ID;
+    $dates_raw  = get_post_meta( $product_id, '_wctb_dates', true );
+    $dates      = $dates_raw ? json_decode( $dates_raw, true ) : [];
+    $available  = wctb_get_available_seats( $product_id );
+    $max        = (int) get_post_meta( $product_id, '_wctb_max_travelers', true );
+
+    if ( empty( $dates ) && ! $max ) return;
+
+    echo '<div class="wctb-tour-info">';
+
+    if ( ! empty( $dates ) ) {
+        echo '<p class="wctb-tour-dates"><strong>' . esc_html__( 'Tour Dates:', 'wc-tour-booking' ) . '</strong><br>';
+        foreach ( $dates as $d ) {
+            echo '<span class="wctb-date-badge">'
+               . esc_html( date_i18n( get_option('date_format'), strtotime( $d['start'] ) ) )
+               . ' – '
+               . esc_html( date_i18n( get_option('date_format'), strtotime( $d['end'] ) ) )
+               . '</span> ';
+        }
+        echo '</p>';
+    }
+
+    if ( $max ) {
+        $pct   = $max > 0 ? round( ( ( $max - $available ) / $max ) * 100 ) : 0;
+        $class = $available === 0 ? 'wctb-seats--full' : ( $available <= 3 ? 'wctb-seats--low' : 'wctb-seats--ok' );
+        echo '<p class="wctb-seats ' . esc_attr( $class ) . '">';
+        echo $available > 0
+            ? esc_html( sprintf( _n( '%d seat available', '%d seats available', $available, 'wc-tour-booking' ), $available ) )
+            : '<strong>' . esc_html__( 'Fully Booked', 'wc-tour-booking' ) . '</strong>';
+        echo '</p>';
+        echo '<div class="wctb-capacity-bar"><div class="wctb-capacity-fill" style="width:' . esc_attr( $pct ) . '%"></div></div>';
+    }
+
+    echo '</div>';
+}
+
+// ─── Product page: date selector + action button ──────────────────────────────
+add_action( 'woocommerce_single_product_summary', 'wctb_render_tour_button', 35 );
+function wctb_render_tour_button() {
+    global $post;
+    $product_id = $post->ID;
+    $dates_raw  = get_post_meta( $product_id, '_wctb_dates', true );
+    if ( ! $dates_raw ) return;
+
+    $button_type = wctb_get_button_type( $product_id );
+    remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30 );
+
+    echo '<div class="wctb-button-area">';
+
+    if ( $button_type === 'book_now' ) {
+        $dates = json_decode( $dates_raw, true );
+        echo '<div class="wctb-date-selector">';
+        echo '<label for="wctb_selected_date"><strong>' . esc_html__( 'Select Tour Date:', 'wc-tour-booking' ) . '</strong></label>';
+        echo '<select id="wctb_selected_date" class="wctb-select">';
+        echo '<option value="">' . esc_html__( '— Choose a date —', 'wc-tour-booking' ) . '</option>';
+        foreach ( $dates as $d ) {
+            $label = date_i18n( get_option('date_format'), strtotime( $d['start'] ) )
+                   . ' – '
+                   . date_i18n( get_option('date_format'), strtotime( $d['end'] ) );
+            echo '<option value="' . esc_attr( $d['start'] . ' to ' . $d['end'] ) . '">' . esc_html( $label ) . '</option>';
+        }
+        echo '</select></div>';
+        echo '<button type="button" id="wctb-book-now-btn" class="button wctb-btn wctb-btn--primary">'
+           . esc_html__( 'Book Now', 'wc-tour-booking' ) . '</button>';
+
+    } elseif ( $button_type === 'waitlist' ) {
+        echo '<p class="wctb-sold-out-msg">' . esc_html__( 'This tour is currently fully booked.', 'wc-tour-booking' ) . '</p>';
+        echo '<button type="button" id="wctb-waitlist-btn" class="button wctb-btn wctb-btn--secondary">'
+           . esc_html__( 'Join Waitlist', 'wc-tour-booking' ) . '</button>';
+
+    } elseif ( $button_type === 'inquiry' ) {
+        echo '<button type="button" id="wctb-inquiry-btn" class="button wctb-btn wctb-btn--outline">'
+           . esc_html__( 'Make an Inquiry', 'wc-tour-booking' ) . '</button>';
+    }
+
+    echo '</div>';
+
+    // Only waitlist + inquiry popups remain on the product page
+    wctb_render_waitlist_popup( $product_id );
+    wctb_render_inquiry_popup( $product_id );
+}
+
+// ─── Waitlist popup ───────────────────────────────────────────────────────────
+function wctb_render_waitlist_popup( $product_id ) { ?>
+    <div id="wctb-waitlist-modal" class="wctb-modal" role="dialog" aria-modal="true" style="display:none;">
+        <div class="wctb-modal__overlay"></div>
+        <div class="wctb-modal__content">
+            <button class="wctb-modal__close" aria-label="<?php esc_attr_e('Close','wc-tour-booking'); ?>">&times;</button>
+            <h2><?php esc_html_e('Join the Waitlist','wc-tour-booking'); ?></h2>
+            <p><?php esc_html_e("This tour is fully booked. Leave your details and we'll contact you if a spot opens.",'wc-tour-booking'); ?></p>
+            <input type="hidden" id="wctb-waitlist-product-id" value="<?php echo esc_attr($product_id); ?>">
+            <div class="wctb-form-group"><label><?php esc_html_e('Full Name *','wc-tour-booking'); ?></label><input type="text" id="wctb-wl-name" class="wctb-input" required></div>
+            <div class="wctb-form-group"><label><?php esc_html_e('Email *','wc-tour-booking'); ?></label><input type="email" id="wctb-wl-email" class="wctb-input" required></div>
+            <div class="wctb-form-group"><label><?php esc_html_e('Phone','wc-tour-booking'); ?></label><input type="tel" id="wctb-wl-phone" class="wctb-input"></div>
+            <div class="wctb-form-group"><label><?php esc_html_e('Number of Travelers','wc-tour-booking'); ?></label><input type="number" id="wctb-wl-travelers" class="wctb-input" min="1" value="1"></div>
+            <button type="button" id="wctb-wl-submit" class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e('Submit Waitlist Request','wc-tour-booking'); ?></button>
+            <div id="wctb-wl-message" class="wctb-message" style="display:none;"></div>
+        </div>
+    </div>
+<?php }
+
+// ─── Inquiry popup ────────────────────────────────────────────────────────────
+function wctb_render_inquiry_popup( $product_id ) { ?>
+    <div id="wctb-inquiry-modal" class="wctb-modal" role="dialog" aria-modal="true" style="display:none;">
+        <div class="wctb-modal__overlay"></div>
+        <div class="wctb-modal__content">
+            <button class="wctb-modal__close" aria-label="<?php esc_attr_e('Close','wc-tour-booking'); ?>">&times;</button>
+            <h2><?php esc_html_e('Make an Inquiry','wc-tour-booking'); ?></h2>
+            <input type="hidden" id="wctb-inquiry-product-id" value="<?php echo esc_attr($product_id); ?>">
+            <div class="wctb-form-group"><label><?php esc_html_e('Full Name *','wc-tour-booking'); ?></label><input type="text" id="wctb-inq-name" class="wctb-input" required></div>
+            <div class="wctb-form-group"><label><?php esc_html_e('Email *','wc-tour-booking'); ?></label><input type="email" id="wctb-inq-email" class="wctb-input" required></div>
+            <div class="wctb-form-group"><label><?php esc_html_e('Phone','wc-tour-booking'); ?></label><input type="tel" id="wctb-inq-phone" class="wctb-input"></div>
+            <div class="wctb-form-group"><label><?php esc_html_e('Message','wc-tour-booking'); ?></label><textarea id="wctb-inq-message" class="wctb-textarea" rows="4"></textarea></div>
+            <button type="button" id="wctb-inq-submit" class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e('Send Inquiry','wc-tour-booking'); ?></button>
+            <div id="wctb-inq-message-feedback" class="wctb-message" style="display:none;"></div>
+        </div>
+    </div>
+<?php }
+
+// ─── Checkout: inject traveler section above billing ─────────────────────────
+add_action( 'woocommerce_checkout_before_customer_details', 'wctb_checkout_traveler_section' );
+function wctb_checkout_traveler_section() {
+    $has_tour = false;
+    foreach ( WC()->cart->get_cart() as $item ) {
+        if ( get_post_meta( $item['product_id'], '_wctb_dates', true ) ) { $has_tour = true; break; }
+    }
+    if ( ! $has_tour ) return;
+
+    echo '<div id="wctb-checkout-travelers-wrap"></div>';
+    // Hidden field to carry serialized traveler JSON to the server
+    echo '<input type="hidden" name="wctb_checkout_travelers" id="wctb_checkout_travelers_data" value="">';
+}
+
+// ─── Checkout: validate traveler data before order is created ─────────────────
+add_action( 'woocommerce_checkout_process', 'wctb_checkout_validate_travelers' );
+function wctb_checkout_validate_travelers() {
+    if ( ! isset( $_POST['wctb_checkout_travelers'] ) ) return;
+
+    $raw = wp_unslash( $_POST['wctb_checkout_travelers'] );
+    if ( empty( $raw ) ) return;
+
+    $all = json_decode( $raw, true );
+    if ( ! is_array( $all ) ) {
+        wc_add_notice( __( 'Traveler data is invalid. Please refresh and try again.', 'wc-tour-booking' ), 'error' );
+        return;
+    }
+
+    foreach ( $all as $group ) {
+        foreach ( $group['travelers'] ?? [] as $t ) {
+            if ( empty( $t['first_name'] ) || empty( $t['last_name'] ) || empty( $t['email'] ) ) {
+                wc_add_notice( __( 'Please complete all required traveler fields (First Name, Last Name, Email).', 'wc-tour-booking' ), 'error' );
+                return;
+            }
+        }
+    }
+}
+
+// ─── Checkout: save traveler data to order + cart item ───────────────────────
+add_action( 'woocommerce_checkout_update_order_meta', 'wctb_save_checkout_traveler_data' );
+function wctb_save_checkout_traveler_data( $order_id ) {
+    if ( empty( $_POST['wctb_checkout_travelers'] ) ) return;
+
+    $raw = wp_unslash( $_POST['wctb_checkout_travelers'] );
+    $all = json_decode( $raw, true );
+    if ( ! is_array( $all ) ) return;
+
+    $order = wc_get_order( $order_id );
+    if ( ! $order ) return;
+
+    foreach ( $order->get_items() as $item ) {
+        $pid = $item->get_product_id();
+        foreach ( $all as $group ) {
+            if ( (int) $group['product_id'] !== $pid ) continue;
+
+            $travelers_raw = $group['travelers'] ?? [];
+            $sanitized     = array_map( function( $t ) {
+                return [
+                    'first_name' => sanitize_text_field( $t['first_name'] ?? '' ),
+                    'last_name'  => sanitize_text_field( $t['last_name']  ?? '' ),
+                    'name'       => sanitize_text_field( ( $t['first_name'] ?? '' ) . ' ' . ( $t['last_name'] ?? '' ) ),
+                    'email'      => sanitize_email(      $t['email']      ?? '' ),
+                    'phone'      => sanitize_text_field( $t['phone']      ?? '' ),
+                    'age'        => absint(              $t['age']        ?? 0  ),
+                    'room_type'  => in_array( $t['room_type'] ?? 'shared', ['shared','single'] ) ? $t['room_type'] : 'shared',
+                ];
+            }, $travelers_raw );
+
+            $paired = wctb_pair_travelers( $sanitized );
+
+            $item->add_meta_data( '_wctb_travelers',      $paired,                true );
+            $item->add_meta_data( '_wctb_traveler_count', count( $paired ),       true );
+            $item->add_meta_data( '_wctb_num_travelers',  count( $paired ),       true );
+            $item->save();
+        }
+    }
+}

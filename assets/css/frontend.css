@@ -1,0 +1,684 @@
+/* =========================================================
+   WC Tour Booking – Frontend Styles
+   ========================================================= */
+
+/* ── Tour Info Block ─────────────────────────────────── */
+.wctb-tour-info {
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0 20px;
+    font-size: 14px;
+}
+
+.wctb-tour-info p {
+    margin: 0 0 10px;
+}
+
+.wctb-date-badge {
+    display: inline-block;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin: 4px 4px 4px 0;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.wctb-date-badge:hover,
+.wctb-date-badge.is-selected {
+    border-color: #2271b1;
+    background: #e7f0fa;
+}
+
+/* Seat badges */
+.wctb-seats { font-weight: 600; }
+.wctb-seats--ok    { color: #28a745; }
+.wctb-seats--low   { color: #e67e22; }
+.wctb-seats--full  { color: #e74c3c; }
+
+/* Capacity bar */
+.wctb-capacity-bar {
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+}
+
+.wctb-capacity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #e67e22, #e74c3c);
+    border-radius: 4px;
+    transition: width 0.4s;
+}
+
+/* ── Button Area ─────────────────────────────────────── */
+.wctb-button-area { margin: 16px 0; }
+
+.wctb-date-selector {
+    margin-bottom: 12px;
+}
+
+.wctb-date-selector label {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.wctb-select {
+    width: 100%;
+    max-width: 380px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.wctb-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.wctb-btn:active { transform: scale(0.98); }
+
+.wctb-btn--primary {
+    background: #2271b1;
+    color: #fff;
+}
+
+.wctb-btn--primary:hover { background: #135e96; color: #fff; }
+
+.wctb-btn--secondary {
+    background: #e67e22;
+    color: #fff;
+}
+
+.wctb-btn--secondary:hover { background: #ca6f1e; color: #fff; }
+
+.wctb-btn--outline {
+    background: transparent;
+    color: #2271b1;
+    border: 2px solid #2271b1;
+}
+
+.wctb-btn--outline:hover { background: #2271b1; color: #fff; }
+
+.wctb-btn--full { width: 100%; display: block; text-align: center; }
+
+.wctb-sold-out-msg {
+    color: #e74c3c;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* ── Modal ───────────────────────────────────────────── */
+.wctb-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wctb-modal__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.wctb-modal__content {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px 36px;
+    width: 90%;
+    max-width: 620px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+}
+
+.wctb-modal__close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    line-height: 1;
+}
+
+.wctb-modal__close:hover { color: #111; }
+
+.wctb-modal__content h2 {
+    margin: 0 0 20px;
+    font-size: 22px;
+}
+
+/* ── Form Elements ───────────────────────────────────── */
+.wctb-form-group {
+    margin-bottom: 14px;
+}
+
+.wctb-form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #444;
+}
+
+.wctb-input,
+.wctb-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.wctb-input:focus,
+.wctb-textarea:focus {
+    outline: none;
+    border-color: #2271b1;
+    box-shadow: 0 0 0 2px rgba(34,113,177,0.2);
+}
+
+/* ── Traveler Blocks ─────────────────────────────────── */
+.wctb-traveler-block {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+    background: #fafafa;
+}
+
+.wctb-traveler-block h4 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color: #2271b1;
+}
+
+.wctb-traveler-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+@media (max-width: 500px) {
+    .wctb-traveler-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Price Summary ───────────────────────────────────── */
+.wctb-price-summary {
+    background: #f0f7ff;
+    border: 1px solid #cce0f5;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 18px 0;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#wctb-total-price {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2271b1;
+}
+
+/* ── Traveler Count Wrap ─────────────────────────────── */
+.wctb-traveler-count-wrap {
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.wctb-traveler-count-wrap label { white-space: nowrap; }
+.wctb-traveler-count-wrap .wctb-select { width: auto; }
+
+/* ── Messages ────────────────────────────────────────── */
+.wctb-message {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-top: 12px;
+    font-size: 14px;
+}
+
+.wctb-message--success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.wctb-message--error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* ── Admin Status Labels ─────────────────────────────── */
+.wctb-status {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.wctb-status--pending  { background: #fff3cd; color: #856404; }
+.wctb-status--approved { background: #d4edda; color: #155724; }
+.wctb-status--rejected { background: #f8d7da; color: #721c24; }
+
+
+/* =========================================================
+   Checkout Traveler Section
+   ========================================================= */
+
+.wctb-co-wrap {
+    margin: 0 0 36px;
+}
+
+/* ── Section card ──────────────────────────────────────── */
+.wctb-co-section {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* ── Tour header ───────────────────────────────────────── */
+.wctb-co-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fafafa;
+}
+
+.wctb-co-tour-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 10px;
+    font-family: Georgia, serif;
+    letter-spacing: -0.3px;
+}
+
+.wctb-co-dates {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+}
+
+.wctb-co-dates span {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 14px;
+    color: #444;
+}
+
+.wctb-co-dates strong {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #888;
+}
+
+/* ── Top bar ───────────────────────────────────────────── */
+.wctb-co-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: #fff;
+    border-bottom: 1px solid #efefef;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Traveler count */
+.wctb-co-count-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.wctb-co-count-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+}
+
+.wctb-co-count {
+    -webkit-appearance: none;
+    appearance: none;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 7px 30px 7px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23555'/%3E%3C/svg%3E") no-repeat right 10px center;
+    cursor: pointer;
+    min-width: 72px;
+    transition: border-color 0.2s;
+}
+
+.wctb-co-count:focus {
+    outline: none;
+    border-color: #111;
+}
+
+/* Pricing bar */
+.wctb-co-pricing-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.wctb-co-price-lines {
+    font-size: 13px;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wctb-co-price-base {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.wctb-co-price-supp {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: #b45309;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.wctb-co-total-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.wctb-co-total-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #999;
+    font-weight: 600;
+}
+
+.wctb-co-total {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111;
+    letter-spacing: -0.5px;
+}
+
+/* ── Traveler block ────────────────────────────────────── */
+.wctb-co-traveler {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f2f2f2;
+    transition: background 0.15s;
+}
+
+.wctb-co-traveler:last-child {
+    border-bottom: none;
+}
+
+.wctb-co-traveler-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.wctb-co-traveler-num {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #333;
+}
+
+/* ── Pair badge ────────────────────────────────────────── */
+.wctb-pair-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    transition: background 0.25s, color 0.25s;
+    user-select: none;
+}
+
+/* Shared state – neutral grey */
+.wctb-pair-badge.wctb-badge--shared {
+    background: #f0f0f0;
+    color: #555;
+    border: 1px solid #ddd;
+}
+
+/* Single state – warm amber */
+.wctb-pair-badge.wctb-badge--single {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+/* Auto-upgraded note inside badge */
+.wctb-auto-note {
+    font-size: 10px;
+    font-weight: 400;
+    font-style: normal;
+    opacity: 0.75;
+    margin-left: 2px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* ── Grid layout ───────────────────────────────────────── */
+.wctb-co-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
+}
+
+.wctb-co-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Room field spans full width */
+.wctb-co-field--room {
+    grid-column: 1 / -1;
+}
+
+.wctb-co-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.wctb-co-label .req {
+    color: #c00;
+    margin-left: 1px;
+}
+
+/* Underline-style inputs */
+.wctb-co-input {
+    border: none;
+    border-bottom: 1.5px solid #d4d4d4;
+    border-radius: 0;
+    padding: 8px 0;
+    font-size: 14px;
+    color: #111;
+    background: transparent;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+}
+
+.wctb-co-input:focus {
+    outline: none;
+    border-bottom-color: #111;
+}
+
+.wctb-co-input::placeholder {
+    color: #bbb;
+    font-size: 13px;
+}
+
+/* ── Room select wrapper + custom select ───────────────── */
+.wctb-room-select-wrap {
+    position: relative;
+    max-width: 340px;
+}
+
+.wctb-room-select-wrap::after {
+    content: '';
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 6px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23555'/%3E%3C/svg%3E") no-repeat center;
+    pointer-events: none;
+}
+
+select.wctb-co-input {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 28px;
+    cursor: pointer;
+}
+
+/* Highlight the room field when single is selected */
+.wctb-co-traveler:has(.wctb-co-room option[value="single"]:checked) .wctb-co-field--room {
+    background: #fffbeb;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: -8px -10px;
+}
+
+/* Fallback for browsers without :has() */
+.wctb-co-field--room.is-single {
+    background: #fffbeb;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin: -8px -10px;
+}
+
+/* ── Room pairing legend ───────────────────────────────── */
+.wctb-co-room-legend {
+    padding: 14px 24px 16px;
+    background: #f8f8f8;
+    border-top: 1px solid #eee;
+}
+
+.wctb-legend-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.wctb-legend-pairs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.wctb-legend-pair {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid transparent;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.wctb-legend-pair--shared {
+    background: #f0f0f0;
+    border-color: #ddd;
+    color: #444;
+}
+
+.wctb-legend-pair--single {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #78350f;
+}
+
+.wctb-legend-pair-label {
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+}
+
+.wctb-legend-pair-names {
+    font-weight: 500;
+}
+
+.wctb-legend-pair-room {
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.65;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .wctb-co-grid          { grid-template-columns: 1fr; }
+    .wctb-co-header,
+    .wctb-co-topbar,
+    .wctb-co-traveler,
+    .wctb-co-room-legend   { padding-left: 16px; padding-right: 16px; }
+    .wctb-co-topbar        { flex-direction: column; align-items: flex-start; }
+    .wctb-co-pricing-bar   { width: 100%; justify-content: space-between; }
+    .wctb-co-field--room   { grid-column: 1; }
+    .wctb-legend-pairs     { flex-direction: column; }
+}
