@@ -24,13 +24,19 @@ function wctb_tour_data_panel() {
     global $post;
     $product_id = $post->ID;
 
-    // Retrieve saved dates (JSON array of {start, end} objects)
     $dates_raw = get_post_meta( $product_id, '_wctb_dates', true );
     $dates     = $dates_raw ? json_decode( $dates_raw, true ) : [];
     if ( empty( $dates ) ) {
-        $dates = [ [ 'start' => '', 'end' => '' ] ];
+        $dates = [ [ 'start' => '', 'end' => '', 'button_type' => 'auto' ] ];
     }
 
+    $btn_options = [
+        'auto'           => __( 'Auto (based on availability)', 'wc-tour-booking' ),
+        'book_now'       => __( 'Book Now',                     'wc-tour-booking' ),
+        'waitlist'       => __( 'Join Waitlist',                'wc-tour-booking' ),
+        'inquiry'        => __( 'Check Availability',           'wc-tour-booking' ),
+        'custom_journey' => __( 'Begin Custom Journey',         'wc-tour-booking' ),
+    ];
     ?>
     <div id="wctb_tour_data" class="panel woocommerce_options_panel">
 
@@ -39,8 +45,10 @@ function wctb_tour_data_panel() {
                 <label><?php esc_html_e( 'Tour Dates', 'wc-tour-booking' ); ?></label>
             </p>
             <div id="wctb-dates-wrapper">
-                <?php foreach ( $dates as $i => $date ) : ?>
-                <div class="wctb-date-row" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+                <?php foreach ( $dates as $i => $date ) :
+                    $btn_type = $date['button_type'] ?? 'auto';
+                    ?>
+                <div class="wctb-date-row">
                     <label><?php esc_html_e( 'Start', 'wc-tour-booking' ); ?>
                         <input type="date" name="wctb_dates[<?php echo esc_attr( $i ); ?>][start]"
                                value="<?php echo esc_attr( $date['start'] ); ?>" class="short" />
@@ -49,6 +57,14 @@ function wctb_tour_data_panel() {
                         <input type="date" name="wctb_dates[<?php echo esc_attr( $i ); ?>][end]"
                                value="<?php echo esc_attr( $date['end'] ); ?>" class="short" />
                     </label>
+                    <div class="wctb-btn-type-wrap">
+                        <label><?php esc_html_e( 'Button Type Override', 'wc-tour-booking' ); ?></label>
+                        <select name="wctb_dates[<?php echo esc_attr( $i ); ?>][button_type]" class="wctb-btn-type-select">
+                            <?php foreach ( $btn_options as $val => $label ) : ?>
+                            <option value="<?php echo esc_attr( $val ); ?>"<?php selected( $btn_type, $val ); ?>><?php echo esc_html( $label ); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                     <button type="button" class="button wctb-remove-date">&times; <?php esc_html_e( 'Remove', 'wc-tour-booking' ); ?></button>
                 </div>
                 <?php endforeach; ?>
@@ -102,20 +118,6 @@ function wctb_tour_data_panel() {
                 'value'       => get_post_meta( $product_id, '_wctb_enable_room_selection', true ),
                 'description' => __( 'Allow travelers to choose between shared and single room.', 'wc-tour-booking' ),
             ] );
-
-            woocommerce_wp_select( [
-                'id'      => '_wctb_button_type',
-                'label'   => __( 'Button Type Override', 'wc-tour-booking' ),
-                'value'   => get_post_meta( $product_id, '_wctb_button_type', true ) ?: 'auto',
-                'options' => [
-                    'auto'     => __( 'Auto (based on availability)', 'wc-tour-booking' ),
-                    'book_now' => __( 'Book Now', 'wc-tour-booking' ),
-                    'waitlist' => __( 'Waitlist', 'wc-tour-booking' ),
-                    'inquiry'  => __( 'Inquiry', 'wc-tour-booking' ),
-                ],
-                'desc_tip'    => true,
-                'description' => __( 'Override automatic button logic if needed.', 'wc-tour-booking' ),
-            ] );
             ?>
         </div>
 
@@ -126,27 +128,26 @@ function wctb_tour_data_panel() {
 // ─── Save product fields ──────────────────────────────────────────────────────
 add_action( 'woocommerce_process_product_meta', 'wctb_save_product_fields' );
 function wctb_save_product_fields( $product_id ) {
+    $valid_btns = [ 'auto', 'book_now', 'waitlist', 'inquiry', 'custom_journey' ];
 
-    // Dates
+    // Dates (each with its own button_type)
     $dates_input = isset( $_POST['wctb_dates'] ) ? (array) $_POST['wctb_dates'] : [];
     $dates_clean = [];
     foreach ( $dates_input as $d ) {
-        $start = sanitize_text_field( $d['start'] ?? '' );
-        $end   = sanitize_text_field( $d['end'] ?? '' );
+        $start    = sanitize_text_field( $d['start']       ?? '' );
+        $end      = sanitize_text_field( $d['end']         ?? '' );
+        $btn_type = sanitize_text_field( $d['button_type'] ?? 'auto' );
+        if ( ! in_array( $btn_type, $valid_btns, true ) ) {
+            $btn_type = 'auto';
+        }
         if ( $start && $end ) {
-            $dates_clean[] = [ 'start' => $start, 'end' => $end ];
+            $dates_clean[] = [ 'start' => $start, 'end' => $end, 'button_type' => $btn_type ];
         }
     }
     update_post_meta( $product_id, '_wctb_dates', wp_json_encode( $dates_clean ) );
 
     // Numeric fields
-    $numeric_fields = [
-        '_wctb_max_travelers',
-        '_wctb_base_price',
-        '_wctb_single_supplement',
-    ];
-    foreach ( $numeric_fields as $key ) {
-        $field = str_replace( '_wctb_', '', $key );
+    foreach ( [ '_wctb_max_travelers', '_wctb_base_price', '_wctb_single_supplement' ] as $key ) {
         if ( isset( $_POST[ $key ] ) ) {
             update_post_meta( $product_id, $key, wc_format_decimal( sanitize_text_field( $_POST[ $key ] ) ) );
         }
@@ -155,17 +156,11 @@ function wctb_save_product_fields( $product_id ) {
     // Sync base price → WooCommerce regular price
     if ( isset( $_POST['_wctb_base_price'] ) ) {
         update_post_meta( $product_id, '_regular_price', wc_format_decimal( sanitize_text_field( $_POST['_wctb_base_price'] ) ) );
-        update_post_meta( $product_id, '_price', wc_format_decimal( sanitize_text_field( $_POST['_wctb_base_price'] ) ) );
+        update_post_meta( $product_id, '_price',         wc_format_decimal( sanitize_text_field( $_POST['_wctb_base_price'] ) ) );
     }
 
     // Checkbox
-    $room_selection = isset( $_POST['_wctb_enable_room_selection'] ) ? 'yes' : 'no';
-    update_post_meta( $product_id, '_wctb_enable_room_selection', $room_selection );
-
-    // Select
-    if ( isset( $_POST['_wctb_button_type'] ) ) {
-        update_post_meta( $product_id, '_wctb_button_type', sanitize_text_field( $_POST['_wctb_button_type'] ) );
-    }
+    update_post_meta( $product_id, '_wctb_enable_room_selection', isset( $_POST['_wctb_enable_room_selection'] ) ? 'yes' : 'no' );
 }
 
 // ─── Admin JS for dynamic date rows ──────────────────────────────────────────
@@ -182,19 +177,32 @@ function wctb_product_admin_js( $hook ) {
     wp_register_script( 'wctb-admin', false, [ 'jquery' ], null, true );
     wp_enqueue_script( 'wctb-admin' );
 
-    $label_start  = esc_js( __( 'Start',  'wc-tour-booking' ) );
-    $label_end    = esc_js( __( 'End',    'wc-tour-booking' ) );
-    $label_remove = esc_js( __( 'Remove', 'wc-tour-booking' ) );
     $idx          = (int) $date_count;
+    $label_start  = esc_js( __( 'Start',                       'wc-tour-booking' ) );
+    $label_end    = esc_js( __( 'End',                         'wc-tour-booking' ) );
+    $label_btn    = esc_js( __( 'Button Type Override',        'wc-tour-booking' ) );
+    $label_remove = esc_js( __( 'Remove',                      'wc-tour-booking' ) );
+    $opt_auto     = esc_js( __( 'Auto (based on availability)','wc-tour-booking' ) );
+    $opt_book     = esc_js( __( 'Book Now',                    'wc-tour-booking' ) );
+    $opt_wl       = esc_js( __( 'Join Waitlist',               'wc-tour-booking' ) );
+    $opt_inq      = esc_js( __( 'Check Availability',          'wc-tour-booking' ) );
+    $opt_cj       = esc_js( __( 'Begin Custom Journey',        'wc-tour-booking' ) );
 
     wp_add_inline_script( 'wctb-admin', <<<JS
 (function($){
     var idx = {$idx};
+    var selectOpts = '<option value="auto">{$opt_auto}</option>'
+        + '<option value="book_now">{$opt_book}</option>'
+        + '<option value="waitlist">{$opt_wl}</option>'
+        + '<option value="inquiry">{$opt_inq}</option>'
+        + '<option value="custom_journey">{$opt_cj}</option>';
 
     $(document).on('click', '.wctb-add-date', function(){
-        var row = '<div class="wctb-date-row" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'
-            + '<label style="display:flex;align-items:center;gap:6px;">{$label_start} <input type="date" name="wctb_dates[' + idx + '][start]" class="short" style="width:160px;" /></label>'
-            + '<label style="display:flex;align-items:center;gap:6px;">{$label_end}   <input type="date" name="wctb_dates[' + idx + '][end]"   class="short" style="width:160px;" /></label>'
+        var row = '<div class="wctb-date-row">'
+            + '<label>{$label_start} <input type="date" name="wctb_dates[' + idx + '][start]" class="short" /></label>'
+            + '<label>{$label_end} <input type="date" name="wctb_dates[' + idx + '][end]" class="short" /></label>'
+            + '<div class="wctb-btn-type-wrap"><label>{$label_btn}</label>'
+            + '<select name="wctb_dates[' + idx + '][button_type]" class="wctb-btn-type-select">' + selectOpts + '</select></div>'
             + '<button type="button" class="button wctb-remove-date">&times; {$label_remove}</button>'
             + '</div>';
         $('#wctb-dates-wrapper').append(row);
@@ -209,7 +217,7 @@ JS
     );
 }
 
-// ─── Admin CSS to ensure date inputs render correctly ─────────────────────────
+// ─── Admin CSS ────────────────────────────────────────────────────────────────
 add_action( 'admin_head', 'wctb_product_admin_css' );
 function wctb_product_admin_css() {
     $screen = get_current_screen();
@@ -220,23 +228,24 @@ function wctb_product_admin_css() {
         display: flex !important;
         flex-wrap: wrap;
         gap: 12px;
-        align-items: center;
+        align-items: flex-end;
         margin-bottom: 10px;
-        padding: 8px 12px;
+        padding: 12px 14px;
         background: #f9f9f9;
         border: 1px solid #e0e0e0;
         border-radius: 4px;
     }
-    #wctb_tour_data .wctb-date-row label {
+    #wctb_tour_data .wctb-date-row > label {
         display: flex !important;
-        align-items: center;
-        gap: 8px;
+        flex-direction: column;
+        gap: 4px;
         font-weight: 500;
         margin: 0;
         padding: 0;
         width: auto !important;
         float: none !important;
         clear: none !important;
+        font-size: 13px;
     }
     #wctb_tour_data .wctb-date-row input[type="date"] {
         display: inline-block !important;
@@ -257,13 +266,29 @@ function wctb_product_admin_css() {
         box-shadow: 0 0 0 1px #2271b1 !important;
         outline: none !important;
     }
-    #wctb_tour_data #wctb-dates-wrapper {
-        padding: 0 12px 8px;
+    #wctb_tour_data .wctb-btn-type-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
     }
-    #wctb_tour_data .wctb-add-date {
-        margin-left: 12px;
-        margin-bottom: 10px;
+    #wctb_tour_data .wctb-btn-type-wrap > label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #555;
+        margin: 0 !important;
+        width: auto !important;
+        float: none !important;
     }
+    #wctb_tour_data .wctb-btn-type-select {
+        min-width: 210px;
+        height: 32px;
+        font-size: 13px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 0 8px;
+    }
+    #wctb_tour_data #wctb-dates-wrapper { padding: 0 12px 8px; }
+    #wctb_tour_data .wctb-add-date { margin-left: 12px; margin-bottom: 10px; }
     </style>
     <?php
 }

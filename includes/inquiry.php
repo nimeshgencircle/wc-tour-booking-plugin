@@ -44,6 +44,56 @@ function wctb_handle_inquiry_submit() {
     wp_send_json_success( [ 'message' => __( 'Thank you! Your inquiry has been sent. We will be in touch shortly.', 'wc-tour-booking' ) ] );
 }
 
+// ─── Custom Journey AJAX ──────────────────────────────────────────────────────
+add_action( 'wp_ajax_wctb_submit_custom_journey',        'wctb_handle_custom_journey_submit' );
+add_action( 'wp_ajax_nopriv_wctb_submit_custom_journey', 'wctb_handle_custom_journey_submit' );
+
+function wctb_handle_custom_journey_submit() {
+    check_ajax_referer( 'wctb_journey_nonce', 'nonce' );
+
+    $product_id    = absint( $_POST['product_id']    ?? 0 );
+    $name          = sanitize_text_field( $_POST['name']           ?? '' );
+    $email         = sanitize_email(      $_POST['email']          ?? '' );
+    $preferred_date = sanitize_text_field( $_POST['preferred_date'] ?? '' );
+    $travelers     = absint(              $_POST['travelers']      ?? 1  );
+    $message       = sanitize_textarea_field( $_POST['message']    ?? '' );
+
+    if ( ! $product_id || ! $name || ! is_email( $email ) ) {
+        wp_send_json_error( [ 'message' => __( 'Please fill in all required fields.', 'wc-tour-booking' ) ] );
+    }
+
+    $full_message = sprintf(
+        "Preferred Date: %s\nTravelers: %d\nMessage:\n%s",
+        $preferred_date,
+        $travelers,
+        $message
+    );
+
+    global $wpdb;
+    $wpdb->insert(
+        $wpdb->prefix . 'wctb_inquiry',
+        [
+            'product_id' => $product_id,
+            'name'       => $name,
+            'email'      => $email,
+            'phone'      => '',
+            'message'    => $full_message,
+        ],
+        [ '%d', '%s', '%s', '%s', '%s' ]
+    );
+
+    $product = wc_get_product( $product_id );
+    $subject = sprintf(
+        __( '[%s] New Custom Journey Request – %s', 'wc-tour-booking' ),
+        get_bloginfo( 'name' ),
+        $product ? $product->get_name() : "Product #$product_id"
+    );
+    $body = "Name: $name\nEmail: $email\n$full_message";
+    wp_mail( get_option( 'admin_email' ), $subject, $body );
+
+    wp_send_json_success( [ 'message' => __( "Thank you! We've received your request and will be in touch soon.", 'wc-tour-booking' ) ] );
+}
+
 // ─── Admin menu page ──────────────────────────────────────────────────────────
 add_action( 'admin_menu', 'wctb_inquiry_admin_menu' );
 function wctb_inquiry_admin_menu() {

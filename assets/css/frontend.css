@@ -2,35 +2,91 @@
    WC Tour Booking – Frontend Styles
    ========================================================= */
 
-/* ── Tour Info Block ─────────────────────────────────── */
+/* ── Tour Info Block (capacity bar only) ─────────────── */
 .wctb-tour-info {
     background: #f9f9f9;
     border: 1px solid #e5e5e5;
     border-radius: 8px;
-    padding: 16px 20px;
-    margin: 16px 0 20px;
+    padding: 12px 20px;
+    margin: 16px 0 12px;
     font-size: 14px;
 }
 
 .wctb-tour-info p {
-    margin: 0 0 10px;
+    margin: 0 0 8px;
 }
 
-.wctb-date-badge {
-    display: inline-block;
+/* ── Tour Dates List ─────────────────────────────────── */
+.wctb-dates-list {
+    margin: 12px 0 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.wctb-date-list-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
     background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 3px 10px;
-    margin: 4px 4px 4px 0;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
+    transition: background 0.15s;
 }
 
-.wctb-date-badge:hover,
-.wctb-date-badge.is-selected {
-    border-color: #2271b1;
-    background: #e7f0fa;
+.wctb-date-list-row:last-child {
+    border-bottom: none;
+}
+
+.wctb-date-list-row:hover {
+    background: #fafafa;
+}
+
+.wctb-date-list-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: #222;
+    flex: 1;
+}
+
+/* ── Dark button (used in date list rows) ────────────── */
+.wctb-btn--dark {
+    background: #111;
+    color: #fff !important;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.wctb-btn--dark:hover,
+.wctb-btn--dark:focus {
+    background: #333;
+    color: #fff !important;
+    outline: none;
+}
+
+@media (max-width: 600px) {
+    .wctb-date-list-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+    }
+    .wctb-btn--dark {
+        width: 100%;
+        justify-content: center;
+    }
 }
 
 /* Seat badges */
