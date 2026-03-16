@@ -1,10 +1,50 @@
 <?php
 /**
  * Product Fields
- * Adds tour-specific meta fields to the WooCommerce product edit page.
+ * Registers the "Tour Product" product type and adds tour-specific meta fields
+ * to the WooCommerce product edit page.
  */
 
 defined( 'ABSPATH' ) || exit;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TOUR PRODUCT TYPE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Tour Product class.
+ * Extends WC_Product_Simple so pricing, cart, and order logic all work
+ * out of the box, with no extra configuration needed.
+ *
+ * Hooked late (after WooCommerce loads) to ensure WC_Product_Simple exists.
+ */
+add_action( 'init', 'wctb_register_tour_product_class', 20 );
+function wctb_register_tour_product_class() {
+    if ( ! class_exists( 'WC_Product_Simple' ) ) {
+        return;
+    }
+
+    class WC_Product_Tour extends WC_Product_Simple {
+        protected $product_type = 'tour';
+
+        public function get_type(): string {
+            return 'tour';
+        }
+    }
+}
+
+// Map the 'tour' type slug to WC_Product_Tour when WooCommerce loads a product.
+add_filter( 'woocommerce_product_class', 'wctb_map_tour_product_class', 10, 2 );
+function wctb_map_tour_product_class( string $classname, string $product_type ): string {
+    return $product_type === 'tour' ? 'WC_Product_Tour' : $classname;
+}
+
+// Add "Tour Product" to the product-type dropdown in the product editor.
+add_filter( 'product_type_selector', 'wctb_add_tour_product_type' );
+function wctb_add_tour_product_type( array $types ): array {
+    $types['tour'] = __( 'Tour Product', 'wc-tour-booking' );
+    return $types;
+}
 
 // ─── Add Tour Data tab to product tabs ───────────────────────────────────────
 add_filter( 'woocommerce_product_data_tabs', 'wctb_add_product_tab' );
