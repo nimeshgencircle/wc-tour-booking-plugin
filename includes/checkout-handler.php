@@ -77,14 +77,20 @@ function wctb_cart_item_display( $item_data, $cart_item ) {
 // ─── 5. Save traveler data to order item meta ─────────────────────────────────
 add_action( 'woocommerce_checkout_create_order_line_item', 'wctb_save_order_item_meta', 10, 4 );
 function wctb_save_order_item_meta( $item, $cart_item_key, $values, $order ) {
+    // Save tour date first — it lives in the cart item and must be captured now.
+    // Travelers are NOT in $values (they are collected on the checkout form and
+    // saved later via wctb_save_checkout_traveler_data), so we cannot gate the
+    // date save on the travelers check.
+    if ( ! empty( $values['wctb_selected_date'] ) ) {
+        $item->add_meta_data( '_wctb_selected_date', $values['wctb_selected_date'], true );
+    }
+
+    // Travelers path — only reached when cart already carries pre-saved traveler
+    // data (edge-case / legacy). Normally saved by wctb_save_checkout_traveler_data.
     if ( empty( $values['wctb_travelers'] ) ) return;
 
     $item->add_meta_data( '_wctb_travelers',      $values['wctb_travelers'],      true );
     $item->add_meta_data( '_wctb_traveler_count', $values['wctb_traveler_count'], true );
-
-    if ( ! empty( $values['wctb_selected_date'] ) ) {
-        $item->add_meta_data( '_wctb_selected_date', $values['wctb_selected_date'], true );
-    }
 }
 
 // ─── 6. Display traveler info in admin order view ────────────────────────────
@@ -138,7 +144,8 @@ function wctb_validate_cart_capacity() {
         if ( empty( $cart_item['wctb_traveler_count'] ) ) continue;
 
         $product_id = $cart_item['product_id'];
-        $available  = wctb_get_available_seats( $product_id );
+        $date       = $cart_item['wctb_selected_date'] ?? '';
+        $available  = wctb_get_available_seats( $product_id, $date );
         $requested  = (int) $cart_item['wctb_traveler_count'];
 
         if ( $requested > $available ) {
@@ -175,6 +182,54 @@ function wctb_recalc_price_from_checkout_data( $post_data ) {
 
     // Persist in session so woocommerce_before_calculate_totals can use it
     WC()->session->set( 'wctb_checkout_travelers', $all );
+}
+
+// ─── 9a. Order-pay: save traveler data to order before payment ───────────────
+//
+// Fires when a customer submits the order-pay form (e.g. from a waitlist pay link).
+// Saves individual traveler details to the order line item and recalculates totals.
+//
+add_action( 'woocommerce_before_pay_action', 'wctb_save_order_pay_traveler_data' );
+function wctb_save_order_pay_traveler_data( $order ) {
+    if ( empty( $_POST['wctb_checkout_travelers'] ) ) return;
+
+    $raw = wp_unslash( $_POST['wctb_checkout_travelers'] );
+    $all = json_decode( $raw, true );
+    if ( ! is_array( $all ) ) return;
+
+    foreach ( $order->get_items() as $item ) {
+        $pid = $item->get_product_id();
+        foreach ( $all as $group ) {
+            if ( (int) $group['product_id'] !== $pid ) continue;
+
+            $sanitized = array_map( function( $t ) {
+                return [
+                    'first_name' => sanitize_text_field( $t['first_name'] ?? '' ),
+                    'last_name'  => sanitize_text_field( $t['last_name']  ?? '' ),
+                    'name'       => sanitize_text_field( ( $t['first_name'] ?? '' ) . ' ' . ( $t['last_name'] ?? '' ) ),
+                    'email'      => sanitize_email(      $t['email']      ?? '' ),
+                    'phone'      => sanitize_text_field( $t['phone']      ?? '' ),
+                    'age'        => absint(              $t['age']        ?? 0  ),
+                    'room_type'  => in_array( $t['room_type'] ?? 'shared', [ 'shared', 'single' ] )
+                                        ? $t['room_type'] : 'shared',
+                ];
+            }, $group['travelers'] ?? [] );
+
+            $paired = wctb_pair_travelers( $sanitized );
+            $count  = count( $paired );
+
+            // Update the line-item quantity to match actual traveler count
+            $item->set_quantity( $count );
+            $item->add_meta_data( '_wctb_travelers',      $paired,  true );
+            $item->add_meta_data( '_wctb_traveler_count', $count,   true );
+            $item->add_meta_data( '_wctb_num_travelers',  $count,   true );
+            $item->save();
+        }
+    }
+
+    // Recalculate totals so price reflects actual traveler count
+    $order->calculate_totals();
+    $order->save();
 }
 
 // ─── 9. Set cart item price from session traveler data ────────────────────────
@@ -221,4 +276,58 @@ function wctb_set_price_from_traveler_data( $cart ) {
 
         $cart_item['data']->set_price( $price );
     }
+}
+
+
+/**
+ * Empty cart before adding a new product in WooCommerce
+ */
+add_action('woocommerce_add_to_cart_validation', 'custom_empty_cart_before_add', 10, 3);
+
+function custom_empty_cart_before_add($passed, $product_id, $quantity) {
+
+    // Prevent running in admin (except AJAX)
+    if (is_admin() && !defined('DOING_AJAX')) {
+        return $passed;
+    }
+
+    // Ensure WooCommerce cart exists
+    if (!WC()->cart) {
+        return $passed;
+    }
+
+    // ---- OPTIONAL: EXCLUSIONS ----
+    // Example 1: Skip variable products
+    $product = wc_get_product($product_id);
+    if ($product && $product->is_type('variable')) {
+        return $passed;
+    }
+
+    // Example 2: Skip products in specific categories
+    $excluded_categories = array('no-clear', 'bundle'); // slug(s)
+    if (has_term($excluded_categories, 'product_cat', $product_id)) {
+        return $passed;
+    }
+
+    // ---- CORE LOGIC ----
+
+    // Only empty cart if it already has items
+    if (!WC()->cart->is_empty()) {
+
+        /**
+         * Important:
+         * Use a static flag to prevent infinite loops.
+         * This ensures the function only runs once per request.
+         */
+        static $cart_cleared = false;
+
+        if (!$cart_cleared) {
+            $cart_cleared = true;
+
+            // Empty the cart
+            WC()->cart->empty_cart();
+        }
+    }
+
+    return $passed;
 }

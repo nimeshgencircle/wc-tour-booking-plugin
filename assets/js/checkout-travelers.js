@@ -57,7 +57,11 @@
     // state[pid] = { count: Number, travelers: Array<{…}> }
     var state = {};
     c.tour_items.forEach(function (tour) {
-        state[tour.product_id] = { count: 1, travelers: [] };
+        // On order-pay the initial count comes from the existing order quantity.
+        // Clamp to available seats so a stale quantity can't exceed current capacity.
+        var maxAvail = tour.available > 0 ? Math.min(tour.max_travelers, tour.available) : 1;
+        var initial  = Math.min(tour.initial_count || 1, maxAvail);
+        state[tour.product_id] = { count: initial, travelers: [] };
     });
 
     /* ── Utilities ────────────────────────────────────────────────── */
@@ -85,8 +89,11 @@
      * Tell WooCommerce to refresh the order review (right-hand totals column).
      * We debounce to 400 ms so rapid room/count changes batch into one request.
      */
+    // On order-pay there is no order-review block, so skip the WC AJAX refresh.
     var triggerWooUpdate = debounce(function () {
-        $(document.body).trigger('update_checkout');
+        if (!c.is_order_pay) {
+            $(document.body).trigger('update_checkout');
+        }
     }, 400);
 
     function parseDateRange(dateStr) {
@@ -260,18 +267,31 @@
             '</div>';
 
         /* Top bar */
+        // Cap the dropdown at available seats for this specific date.
+        console.log(tour);
+        var maxOpts = (tour.available > 0)
+            ? Math.min(tour.max_travelers, tour.available)
+            : 0;
+
         html +=
             '<div class="wctb-co-topbar">' +
-                '<div class="wctb-co-count-wrap">' +
-                    '<label class="wctb-co-count-label" for="wctb-count-' + pid + '">' + i18n.num_travelers + '</label>' +
-                    '<select id="wctb-count-' + pid + '" class="wctb-co-count" data-pid="' + pid + '">';
+                '<div class="wctb-co-count-wrap">';
 
-        for (var n = 1; n <= tour.max_travelers; n++) {
-            html += '<option value="' + n + '"' + (n === st.count ? ' selected' : '') + '>' + n + '</option>';
+        if (maxOpts === 0) {
+            html += '<p class="wctb-fully-booked">' + escHtml(c.i18n.fully_booked || 'This date is fully booked.') + '</p>';
+        } else {
+            html +=
+                '<label class="wctb-co-count-label" for="wctb-count-' + pid + '">' + i18n.num_travelers + '</label>' +
+                '<select id="wctb-count-' + pid + '" class="wctb-co-count" data-pid="' + pid + '">';
+
+            for (var n = 1; n <= maxOpts; n++) {
+                html += '<option value="' + n + '"' + (n === st.count ? ' selected' : '') + '>' + n + '</option>';
+            }
+
+            html += '</select>';
         }
 
-        html +=     '</select>' +
-                '</div>' +
+        html +=     '</div>' +
                 '<div class="wctb-co-pricing-bar">' +
                     '<div class="wctb-co-price-lines">' +
                         '<div class="wctb-co-price-base">' +
@@ -485,7 +505,6 @@
     $(document).on('change', '.wctb-co-count', function () {
         var pid   = $(this).data('pid');
         var count = parseInt($(this).val()) || 1;
-        var prev  = state[pid].count;
         state[pid].count = count;
 
         collectFromDOM();

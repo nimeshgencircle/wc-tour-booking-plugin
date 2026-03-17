@@ -42,29 +42,33 @@
     });
 
     $(document).on('click', '#wctb-wl-submit', function () {
-        var name      = $('#wctb-wl-name').val().trim();
+        var firstName = $('#wctb-wl-first-name').val().trim();
+        var lastName  = $('#wctb-wl-last-name').val().trim();
         var email     = $('#wctb-wl-email').val().trim();
         var phone     = $('#wctb-wl-phone').val().trim();
         var travelers = parseInt($('#wctb-wl-travelers').val()) || 1;
+        var message   = $('#wctb-wl-message-text').val().trim();
         var date      = $('#wctb-waitlist-date').val();
-        var $msg      = $('#wctb-wl-message');
+        var $feedback = $('#wctb-wl-message');
 
-        if (!name || !email) { showMessage($msg, d.i18n.fill_required, 'error'); return; }
+        if (!firstName || !lastName || !email) { showMessage($feedback, d.i18n.fill_required, 'error'); return; }
 
         $(this).prop('disabled', true);
         $.post(d.ajax_url, {
             action:     'wctb_submit_waitlist',
             nonce:      d.waitlist_nonce,
             product_id: d.product_id,
-            name:       name,
+            first_name: firstName,
+            last_name:  lastName,
             email:      email,
             phone:      phone,
             travelers:  travelers,
+            message:    message,
             date:       date,
         }, function (r) {
-            showMessage($msg, r.data.message, r.success ? 'success' : 'error');
+            showMessage($feedback, r.data.message, r.success ? 'success' : 'error');
         }).fail(function () {
-            showMessage($msg, d.i18n.error, 'error');
+            showMessage($feedback, d.i18n.error, 'error');
         }).always(function () {
             $('#wctb-wl-submit').prop('disabled', false);
         });

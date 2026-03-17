@@ -223,6 +223,16 @@
 }
 
 /* ── Form Elements ───────────────────────────────────── */
+.wctb-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 480px) {
+    .wctb-form-row { grid-template-columns: 1fr; }
+}
+
 .wctb-form-group {
     margin-bottom: 14px;
 }
