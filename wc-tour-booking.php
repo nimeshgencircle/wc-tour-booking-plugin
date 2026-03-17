@@ -23,6 +23,39 @@ define( 'WCTB_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'WCTB_URL',      plugin_dir_url( __FILE__ ) );
 define( 'WCTB_BASENAME', plugin_basename( __FILE__ ) );
 
+
+// wc-tour-booking.php
+
+/**
+ * Declare compatibility with WooCommerce features.
+ * Must run before WooCommerce initializes — use 'before_woocommerce_init'.
+ */
+add_action( 'before_woocommerce_init', 'wctb_declare_woocommerce_compatibility' );
+function wctb_declare_woocommerce_compatibility() {
+    if ( ! class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+        return;
+    }
+
+    // ── HPOS (High-Performance Order Storage) ──────────────────────────────
+    // The plugin reads orders via wc_get_orders() and $order->get_items(),
+    // which are HPOS-compatible APIs. Safe to declare compatible.
+    \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+        'custom_order_tables',
+        WCTB_FILE,   // path to wc-tour-booking.php — defined as __FILE__ at plugin root
+        true         // true = compatible
+    );
+
+    // ── Cart & Checkout Blocks ─────────────────────────────────────────────
+    // The checkout traveler form is injected via woocommerce_checkout_before_customer_details,
+    // which is a shortcode-checkout hook and does NOT fire in the block-based checkout.
+    // Declare incompatible so WooCommerce warns users who switch to block checkout.
+    \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+        'cart_checkout_blocks',
+        WCTB_FILE,
+        false        // false = NOT compatible with block checkout
+    );
+}
+
 // ─── WooCommerce dependency check ────────────────────────────────────────────
 add_action( 'admin_notices', 'wctb_woocommerce_missing_notice' );
 function wctb_woocommerce_missing_notice() {

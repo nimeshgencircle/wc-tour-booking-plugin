@@ -30,6 +30,28 @@ function wctb_register_waitlist_cpt() {
         'capability_type' => 'post',
         'map_meta_cap'    => true,
     ] );
+
+     register_post_type( 'wctb_availability', [
+        'labels'          => [
+            'name'               => __( 'Availability',            'wc-tour-booking' ),
+            'singular_name'      => __( 'Availability Entry',      'wc-tour-booking' ),
+            'menu_name'          => __( 'Availability',            'wc-tour-booking' ),
+            'all_items'          => __( 'All availability Entries', 'wc-tour-booking' ),
+            'edit_item'          => __( 'Edit Entry',           'wc-tour-booking' ),
+            'view_item'          => __( 'View Entry',           'wc-tour-booking' ),
+            'search_items'       => __( 'Search Entries',       'wc-tour-booking' ),
+            'not_found'          => __( 'No entries found.',    'wc-tour-booking' ),
+            'not_found_in_trash' => __( 'No entries in Trash.', 'wc-tour-booking' ),
+        ],
+        'public'          => false,
+        'show_ui'         => true,
+        'show_in_menu'    => 'woocommerce',
+        'show_in_rest'    => false,
+        'supports'        => [ 'title' ],
+        'capability_type' => 'post',
+        'map_meta_cap'    => true,
+    ] );
+
 }
 
 // Hide the "Slug" and default "Custom Fields" meta boxes from the edit screen.
