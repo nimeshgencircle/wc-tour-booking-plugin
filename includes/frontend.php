@@ -118,6 +118,7 @@ function wctb_enqueue_assets() {
                 'phone'           => __( 'Phone Number',                                               'wc-tour-booking' ),
                 'age'             => __( 'Age',                                                        'wc-tour-booking' ),
                 'room_pref'       => __( 'Room Preference',                                            'wc-tour-booking' ),
+                'sharing_pref'    => __( 'Sharing Preference',                                         'wc-tour-booking' ),                
                 'shared_room'     => __( 'Shared Room',                                                'wc-tour-booking' ),
                 'single_room'     => __( 'Private Room',                                               'wc-tour-booking' ),
                 'num_travelers'   => __( 'Number of Travelers',                                        'wc-tour-booking' ),
@@ -158,7 +159,7 @@ function wctb_format_date_range( string $start, string $end ): string {
 }
 
 // ─── Product page: capacity info ──────────────────────────────────────────────
-add_action( 'woocommerce_single_product_summary', 'wctb_display_tour_info', 25 );
+//add_action( 'woocommerce_single_product_summary', 'wctb_display_tour_info', 25 );
 function wctb_display_tour_info() {
     global $post;
     $product_id = $post->ID;
@@ -299,18 +300,29 @@ function wctb_render_inquiry_popup( $product_id ) { ?>
         <button class="wctb-modal__close"
             aria-label="<?php esc_attr_e( 'Close', 'wc-tour-booking' ); ?>">&times;</button>
         <h2><?php esc_html_e( 'Check Availability', 'wc-tour-booking' ); ?></h2>
+        <p><?php esc_html_e( "Leave your details and we'll check availability and get back to you.", 'wc-tour-booking' ); ?>
+        </p>
         <input type="hidden" id="wctb-inquiry-product-id" value="<?php echo esc_attr( $product_id ); ?>">
         <input type="hidden" id="wctb-inquiry-date" value="">
-        <div class="wctb-form-group"><label><?php esc_html_e( 'Full Name *', 'wc-tour-booking' ); ?></label><input
-                type="text" id="wctb-inq-name" class="wctb-input" required></div>
-        <div class="wctb-form-group"><label><?php esc_html_e( 'Email *', 'wc-tour-booking' ); ?></label><input
+        <div class="wctb-form-row">
+            <div class="wctb-form-group"><label><?php esc_html_e( 'First Name *', 'wc-tour-booking' ); ?></label><input
+                    type="text" id="wctb-inq-first-name" class="wctb-input" required></div>
+            <div class="wctb-form-group"><label><?php esc_html_e( 'Last Name *', 'wc-tour-booking' ); ?></label><input
+                    type="text" id="wctb-inq-last-name" class="wctb-input" required></div>
+        </div>
+        <div class="wctb-form-group"><label><?php esc_html_e( 'Email Address *', 'wc-tour-booking' ); ?></label><input
                 type="email" id="wctb-inq-email" class="wctb-input" required></div>
-        <div class="wctb-form-group"><label><?php esc_html_e( 'Phone', 'wc-tour-booking' ); ?></label><input type="tel"
-                id="wctb-inq-phone" class="wctb-input"></div>
+        <div class="wctb-form-group"><label><?php esc_html_e( 'Phone Number', 'wc-tour-booking' ); ?></label><input
+                type="tel" id="wctb-inq-phone" class="wctb-input"></div>
+        <div class="wctb-form-group">
+            <label><?php esc_html_e( 'Number of Travelers *', 'wc-tour-booking' ); ?></label><input type="number"
+                id="wctb-inq-travelers" class="wctb-input" min="1" value="1" required></div>
         <div class="wctb-form-group"><label><?php esc_html_e( 'Message', 'wc-tour-booking' ); ?></label><textarea
-                id="wctb-inq-message" class="wctb-textarea" rows="4"></textarea></div>
+                id="wctb-inq-message" class="wctb-textarea" rows="3"
+                placeholder="<?php esc_attr_e( 'Any special requests or questions?', 'wc-tour-booking' ); ?>"></textarea>
+        </div>
         <button type="button" id="wctb-inq-submit"
-            class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'Send Inquiry', 'wc-tour-booking' ); ?></button>
+            class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'Check Availability', 'wc-tour-booking' ); ?></button>
         <div id="wctb-inq-message-feedback" class="wctb-message" style="display:none;"></div>
     </div>
 </div>
@@ -327,18 +339,55 @@ function wctb_render_custom_journey_popup( $product_id ) { ?>
         <p><?php esc_html_e( "Tell us about your ideal trip and we'll craft a personalised itinerary for you.", 'wc-tour-booking' ); ?>
         </p>
         <input type="hidden" id="wctb-cj-product-id" value="<?php echo esc_attr( $product_id ); ?>">
-        <div class="wctb-form-group"><label><?php esc_html_e( 'Full Name *', 'wc-tour-booking' ); ?></label><input
-                type="text" id="wctb-cj-name" class="wctb-input" required></div>
-        <div class="wctb-form-group"><label><?php esc_html_e( 'Email *', 'wc-tour-booking' ); ?></label><input
-                type="email" id="wctb-cj-email" class="wctb-input" required></div>
-        <div class="wctb-form-group"><label><?php esc_html_e( 'Preferred Date', 'wc-tour-booking' ); ?></label><input
-                type="text" id="wctb-cj-preferred-date" class="wctb-input" placeholder="e.g. March 21, 2026"></div>
+        <input type="hidden" id="wctb-cj-travel-date" value="">
+        <div class="wctb-form-row">
+            <div class="wctb-form-group"><label><?php esc_html_e( 'First Name *', 'wc-tour-booking' ); ?></label><input
+                    type="text" id="wctb-cj-first-name" class="wctb-input" required></div>
+            <div class="wctb-form-group"><label><?php esc_html_e( 'Last Name *', 'wc-tour-booking' ); ?></label><input
+                    type="text" id="wctb-cj-last-name" class="wctb-input" required></div>
+        </div>
+        <div class="wctb-form-group"><label><?php esc_html_e( 'Phone Number *', 'wc-tour-booking' ); ?></label><input
+                type="tel" id="wctb-cj-phone" class="wctb-input" required></div>
         <div class="wctb-form-group">
-            <label><?php esc_html_e( 'Number of Travelers', 'wc-tour-booking' ); ?></label><input type="number"
-                id="wctb-cj-travelers" class="wctb-input" min="1" value="1"></div>
-        <div class="wctb-form-group"><label><?php esc_html_e( 'Message', 'wc-tour-booking' ); ?></label><textarea
-                id="wctb-cj-message" class="wctb-textarea" rows="4"
-                placeholder="<?php esc_attr_e( 'Tell us about your travel preferences, special requirements, etc.', 'wc-tour-booking' ); ?>"></textarea>
+            <label><?php esc_html_e( 'Method of Contact *', 'wc-tour-booking' ); ?></label>
+            <select id="wctb-cj-contact-method" class="wctb-input" required>
+                <option value=""><?php esc_html_e( '— Select —', 'wc-tour-booking' ); ?></option>
+                <option value="Email"><?php esc_html_e( 'Email', 'wc-tour-booking' ); ?></option>
+                <option value="Phone"><?php esc_html_e( 'Phone', 'wc-tour-booking' ); ?></option>
+                <option value="WhatsApp"><?php esc_html_e( 'WhatsApp', 'wc-tour-booking' ); ?></option>
+            </select>
+        </div>
+        <div class="wctb-form-group">
+            <label><?php esc_html_e( 'Where would you like to travel? *', 'wc-tour-booking' ); ?></label><input
+                type="text" id="wctb-cj-destination" class="wctb-input" required
+                placeholder="<?php esc_attr_e( 'e.g. Patagonia, South America', 'wc-tour-booking' ); ?>"></div>
+        <div class="wctb-form-group">
+            <label><?php esc_html_e( 'Top 3 Priorities *', 'wc-tour-booking' ); ?></label><textarea
+                id="wctb-cj-priorities" class="wctb-textarea" rows="3" required
+                placeholder="<?php esc_attr_e( 'e.g. 1. Adventure  2. Local cuisine  3. Comfortable accommodation', 'wc-tour-booking' ); ?>"></textarea>
+        </div>
+        <div class="wctb-form-group">
+            <label><?php esc_html_e( 'When I travel I…', 'wc-tour-booking' ); ?></label><textarea
+                id="wctb-cj-travel-style" class="wctb-textarea" rows="2"
+                placeholder="<?php esc_attr_e( 'e.g. prefer off-the-beaten-path experiences, always seek out local markets…', 'wc-tour-booking' ); ?>"></textarea>
+        </div>
+        <div class="wctb-form-row">
+            <div class="wctb-form-group">
+                <label><?php esc_html_e( 'Daily Budget *', 'wc-tour-booking' ); ?></label><input type="text"
+                    id="wctb-cj-budget" class="wctb-input" required
+                    placeholder="<?php esc_attr_e( 'e.g. $300/day', 'wc-tour-booking' ); ?>"></div>
+            <div class="wctb-form-group">
+                <label><?php esc_html_e( 'Number of Travelers *', 'wc-tour-booking' ); ?></label><input type="number"
+                    id="wctb-cj-travelers" class="wctb-input" min="1" value="1" required></div>
+        </div>
+        <div class="wctb-form-group">
+            <label><?php esc_html_e( 'When are you looking to travel? *', 'wc-tour-booking' ); ?></label><input
+                type="text" id="wctb-cj-travel-when" class="wctb-input" required
+                placeholder="<?php esc_attr_e( 'e.g. March 2026, flexible in summer', 'wc-tour-booking' ); ?>"></div>
+        <div class="wctb-form-group">
+            <label><?php esc_html_e( 'Anything else we should know?', 'wc-tour-booking' ); ?></label><textarea
+                id="wctb-cj-notes" class="wctb-textarea" rows="3"
+                placeholder="<?php esc_attr_e( 'Special requirements, dietary needs, accessibility needs…', 'wc-tour-booking' ); ?>"></textarea>
         </div>
         <button type="button" id="wctb-cj-submit"
             class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'Send My Request', 'wc-tour-booking' ); ?></button>

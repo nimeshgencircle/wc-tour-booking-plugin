@@ -57,8 +57,10 @@ function wctb_register_waitlist_cpt() {
 // Hide the "Slug" and default "Custom Fields" meta boxes from the edit screen.
 add_action( 'do_meta_boxes', 'wctb_waitlist_remove_default_boxes' );
 function wctb_waitlist_remove_default_boxes() {
-    remove_meta_box( 'slugdiv',     'wctb_waitlist', 'normal' );
-    remove_meta_box( 'postcustom',  'wctb_waitlist', 'normal' );
+    remove_meta_box( 'slugdiv',    'wctb_waitlist',     'normal' );
+    remove_meta_box( 'postcustom', 'wctb_waitlist',     'normal' );
+    remove_meta_box( 'slugdiv',    'wctb_availability', 'normal' );
+    remove_meta_box( 'postcustom', 'wctb_availability', 'normal' );
 }
 
 // ─── AJAX: Frontend form submission ──────────────────────────────────────────
@@ -388,6 +390,286 @@ function wctb_send_waitlist_approval_email( int $post_id, $order ) {
     $body = sprintf(
         __( "Hi %s,\n\n"
           . "Great news! Your waitlist request has been approved.\n\n"
+          . "─────────────────────────\n"
+          . "BOOKING SUMMARY\n"
+          . "─────────────────────────\n"
+          . "Tour:         %s\n"
+          . "Travel Date:  %s\n"
+          . "Travelers:    %d\n"
+          . "Order #:      %d\n"
+          . "Total:        %s\n"
+          . "─────────────────────────\n\n"
+          . "To confirm your booking please complete your payment:\n"
+          . "%s\n\n"
+          . "This link is unique to your order — please do not share it.\n\n"
+          . "Thank you for choosing %s!\n",
+          'wc-tour-booking' ),
+        $first_name, $tour, $travel_date ?: '—', $travelers,
+        $order_id, $total, $pay_url, $site
+    );
+
+    wp_mail( $email, $subject, $body );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AVAILABILITY CPT — Admin workflow (mirrors Waitlist above)
+// Meta key prefix: _wctb_av_
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Admin: custom list columns ───────────────────────────────────────────────
+add_filter( 'manage_wctb_availability_posts_columns', 'wctb_availability_columns' );
+function wctb_availability_columns( $columns ) {
+    return [
+        'cb'               => '<input type="checkbox">',
+        'title'            => __( 'Customer',    'wc-tour-booking' ),
+        'wctb_tour'        => __( 'Tour',         'wc-tour-booking' ),
+        'wctb_email'       => __( 'Email',        'wc-tour-booking' ),
+        'wctb_travelers'   => __( 'Travelers',    'wc-tour-booking' ),
+        'wctb_travel_date' => __( 'Travel Date',  'wc-tour-booking' ),
+        'wctb_status'      => __( 'Status',       'wc-tour-booking' ),
+        'wctb_order'       => __( 'Order',        'wc-tour-booking' ),
+        'date'             => __( 'Submitted',    'wc-tour-booking' ),
+    ];
+}
+
+add_action( 'manage_wctb_availability_posts_custom_column', 'wctb_availability_column_content', 10, 2 );
+function wctb_availability_column_content( $column, $post_id ) {
+    switch ( $column ) {
+
+        case 'wctb_tour':
+            $pid  = (int) get_post_meta( $post_id, '_wctb_av_product_id', true );
+            $prod = $pid ? wc_get_product( $pid ) : false;
+            echo $prod
+                ? '<a href="' . esc_url( get_edit_post_link( $pid ) ) . '">' . esc_html( $prod->get_name() ) . '</a>'
+                : esc_html( "#{$pid}" );
+            break;
+
+        case 'wctb_email':
+            echo esc_html( get_post_meta( $post_id, '_wctb_av_email', true ) );
+            break;
+
+        case 'wctb_travelers':
+            echo esc_html( get_post_meta( $post_id, '_wctb_av_travelers', true ) );
+            break;
+
+        case 'wctb_travel_date':
+            echo esc_html( get_post_meta( $post_id, '_wctb_av_travel_date', true ) ?: '—' );
+            break;
+
+        case 'wctb_status':
+            $status = get_post_meta( $post_id, '_wctb_av_status', true ) ?: 'pending';
+            $map    = [
+                'pending'  => [ '#fff3cd', '#856404' ],
+                'approved' => [ '#d4edda', '#155724' ],
+                'rejected' => [ '#f8d7da', '#721c24' ],
+            ];
+            [ $bg, $color ] = $map[ $status ] ?? [ '#eee', '#333' ];
+            printf(
+                '<span style="background:%s;color:%s;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">%s</span>',
+                esc_attr( $bg ), esc_attr( $color ), esc_html( ucfirst( $status ) )
+            );
+            break;
+
+        case 'wctb_order':
+            $order_id = get_post_meta( $post_id, '_wctb_av_order_id', true );
+            echo $order_id
+                ? '<a href="' . esc_url( admin_url( "post.php?post={$order_id}&action=edit" ) ) . '">#' . (int) $order_id . '</a>'
+                : '—';
+            break;
+    }
+}
+
+add_filter( 'manage_edit-wctb_availability_sortable_columns', 'wctb_availability_sortable_columns' );
+function wctb_availability_sortable_columns( $columns ) {
+    $columns['wctb_status'] = 'wctb_status';
+    return $columns;
+}
+
+// ─── Admin: meta box ──────────────────────────────────────────────────────────
+add_action( 'add_meta_boxes', 'wctb_availability_add_meta_boxes' );
+function wctb_availability_add_meta_boxes() {
+    add_meta_box(
+        'wctb_availability_details',
+        __( 'Availability Request Details', 'wc-tour-booking' ),
+        'wctb_availability_meta_box_html',
+        'wctb_availability',
+        'normal',
+        'high'
+    );
+}
+
+function wctb_availability_meta_box_html( $post ) {
+    wp_nonce_field( 'wctb_availability_meta_save', 'wctb_availability_meta_nonce' );
+
+    $product_id = (int) get_post_meta( $post->ID, '_wctb_av_product_id', true );
+    $product    = $product_id ? wc_get_product( $product_id ) : false;
+
+    if ( $product ) {
+        echo '<p><strong>' . esc_html__( 'Tour:', 'wc-tour-booking' ) . '</strong> '
+            . '<a href="' . esc_url( get_edit_post_link( $product_id ) ) . '" target="_blank">'
+            . esc_html( $product->get_name() ) . '</a></p><hr>';
+    }
+
+    $editable_fields = [
+        '_wctb_av_travel_date' => [ 'label' => __( 'Travel Date',         'wc-tour-booking' ), 'type' => 'text'     ],
+        '_wctb_av_first_name'  => [ 'label' => __( 'First Name',          'wc-tour-booking' ), 'type' => 'text'     ],
+        '_wctb_av_last_name'   => [ 'label' => __( 'Last Name',           'wc-tour-booking' ), 'type' => 'text'     ],
+        '_wctb_av_email'       => [ 'label' => __( 'Email Address',       'wc-tour-booking' ), 'type' => 'email'    ],
+        '_wctb_av_phone'       => [ 'label' => __( 'Phone Number',        'wc-tour-booking' ), 'type' => 'tel'      ],
+        '_wctb_av_travelers'   => [ 'label' => __( 'Number of Travelers', 'wc-tour-booking' ), 'type' => 'number'   ],
+        '_wctb_av_message'     => [ 'label' => __( 'Message',             'wc-tour-booking' ), 'type' => 'textarea' ],
+    ];
+
+    echo '<table class="form-table"><tbody>';
+
+    foreach ( $editable_fields as $key => $cfg ) {
+        $value = get_post_meta( $post->ID, $key, true );
+        echo '<tr><th scope="row"><label for="' . esc_attr( $key ) . '">' . esc_html( $cfg['label'] ) . '</label></th><td>';
+        if ( $cfg['type'] === 'textarea' ) {
+            echo '<textarea id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" class="large-text" rows="4">'
+                . esc_textarea( $value ) . '</textarea>';
+        } else {
+            echo '<input type="' . esc_attr( $cfg['type'] ) . '" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" '
+                . 'value="' . esc_attr( $value ) . '" class="regular-text">';
+        }
+        echo '</td></tr>';
+    }
+
+    // Status select
+    $status   = get_post_meta( $post->ID, '_wctb_av_status', true ) ?: 'pending';
+    $statuses = [
+        'pending'  => __( 'Pending',  'wc-tour-booking' ),
+        'approved' => __( 'Approved', 'wc-tour-booking' ),
+        'rejected' => __( 'Rejected', 'wc-tour-booking' ),
+    ];
+    echo '<tr><th scope="row"><label for="_wctb_av_status">' . esc_html__( 'Status', 'wc-tour-booking' ) . '</label></th><td>';
+    echo '<select id="_wctb_av_status" name="_wctb_av_status">';
+    foreach ( $statuses as $val => $label ) {
+        printf( '<option value="%s"%s>%s</option>', esc_attr( $val ), selected( $status, $val, false ), esc_html( $label ) );
+    }
+    echo '</select>';
+    echo '<p class="description">'
+        . esc_html__( 'Setting to "Approved" automatically creates a WooCommerce order and emails the customer a payment link.', 'wc-tour-booking' )
+        . '</p>';
+    echo '</td></tr>';
+
+    // Linked order (read-only)
+    $order_id = get_post_meta( $post->ID, '_wctb_av_order_id', true );
+    if ( $order_id ) {
+        echo '<tr><th scope="row">' . esc_html__( 'WC Order', 'wc-tour-booking' ) . '</th><td>'
+            . '<a href="' . esc_url( admin_url( "post.php?post={$order_id}&action=edit" ) ) . '" target="_blank">'
+            . esc_html__( 'Order #', 'wc-tour-booking' ) . esc_html( $order_id ) . '</a>'
+            . '</td></tr>';
+    }
+
+    echo '</tbody></table>';
+}
+
+// ─── Admin: save meta ─────────────────────────────────────────────────────────
+add_action( 'save_post_wctb_availability', 'wctb_save_availability_post_meta', 10, 2 );
+function wctb_save_availability_post_meta( $post_id, $post ) {
+    if ( wp_is_post_autosave( $post_id ) || wp_is_post_revision( $post_id ) ) return;
+    if ( ! isset( $_POST['wctb_availability_meta_nonce'] ) ) return;
+    if ( ! wp_verify_nonce( $_POST['wctb_availability_meta_nonce'], 'wctb_availability_meta_save' ) ) return;
+    if ( ! current_user_can( 'edit_post', $post_id ) ) return;
+
+    $text_fields = [
+        '_wctb_av_travel_date',
+        '_wctb_av_first_name',
+        '_wctb_av_last_name',
+        '_wctb_av_email',
+        '_wctb_av_phone',
+    ];
+    foreach ( $text_fields as $field ) {
+        if ( isset( $_POST[ $field ] ) ) {
+            update_post_meta( $post_id, $field, sanitize_text_field( $_POST[ $field ] ) );
+        }
+    }
+
+    if ( isset( $_POST['_wctb_av_travelers'] ) ) {
+        update_post_meta( $post_id, '_wctb_av_travelers', absint( $_POST['_wctb_av_travelers'] ) );
+    }
+    if ( isset( $_POST['_wctb_av_message'] ) ) {
+        update_post_meta( $post_id, '_wctb_av_message', sanitize_textarea_field( $_POST['_wctb_av_message'] ) );
+    }
+
+    $new_status = sanitize_text_field( $_POST['_wctb_av_status'] ?? 'pending' );
+    if ( ! in_array( $new_status, [ 'pending', 'approved', 'rejected' ], true ) ) {
+        $new_status = 'pending';
+    }
+    $old_status = get_post_meta( $post_id, '_wctb_av_status', true );
+    update_post_meta( $post_id, '_wctb_av_status', $new_status );
+
+    // Create WC order on first approval
+    if ( $new_status === 'approved' && $old_status !== 'approved' ) {
+        $existing_order = get_post_meta( $post_id, '_wctb_av_order_id', true );
+        if ( ! $existing_order ) {
+            wctb_create_order_from_availability( $post_id );
+        }
+    }
+}
+
+// ─── Create WC order from availability entry ──────────────────────────────────
+function wctb_create_order_from_availability( int $post_id ) {
+    $product_id  = (int) get_post_meta( $post_id, '_wctb_av_product_id',  true );
+    $first_name  =       get_post_meta( $post_id, '_wctb_av_first_name',  true );
+    $last_name   =       get_post_meta( $post_id, '_wctb_av_last_name',   true );
+    $email       =       get_post_meta( $post_id, '_wctb_av_email',       true );
+    $phone       =       get_post_meta( $post_id, '_wctb_av_phone',       true );
+    $travelers   = max( 1, (int) get_post_meta( $post_id, '_wctb_av_travelers', true ) );
+    $travel_date =       get_post_meta( $post_id, '_wctb_av_travel_date', true );
+
+    $product = wc_get_product( $product_id );
+    if ( ! $product ) return;
+
+    $order = wc_create_order( [ 'customer_id' => 0 ] );
+    $order->add_product( $product, $travelers );
+
+    $address = [
+        'first_name' => $first_name,
+        'last_name'  => $last_name,
+        'email'      => $email,
+        'phone'      => $phone,
+    ];
+    $order->set_address( $address, 'billing' );
+    $order->set_address( $address, 'shipping' );
+
+    if ( $travel_date ) {
+        $order->update_meta_data( '_wctb_travel_date', $travel_date );
+    }
+
+    $order->set_status( 'pending' );
+    $order->calculate_totals();
+    $order->save();
+
+    update_post_meta( $post_id, '_wctb_av_order_id', $order->get_id() );
+
+    wctb_send_availability_approval_email( $post_id, $order );
+}
+
+// ─── Approval email with pay link ─────────────────────────────────────────────
+function wctb_send_availability_approval_email( int $post_id, $order ) {
+    $first_name  =       get_post_meta( $post_id, '_wctb_av_first_name',  true );
+    $email       =       get_post_meta( $post_id, '_wctb_av_email',       true );
+    $travel_date =       get_post_meta( $post_id, '_wctb_av_travel_date', true );
+    $travelers   = (int) get_post_meta( $post_id, '_wctb_av_travelers',   true );
+    $product_id  = (int) get_post_meta( $post_id, '_wctb_av_product_id',  true );
+
+    $product  = wc_get_product( $product_id );
+    $tour     = $product ? $product->get_name() : '';
+    $pay_url  = $order->get_checkout_payment_url();
+    $order_id = $order->get_id();
+    $total    = strip_tags( $order->get_formatted_order_total() );
+    $site     = get_bloginfo( 'name' );
+
+    $subject = sprintf(
+        __( '[%s] Your availability request is confirmed! – Order #%d', 'wc-tour-booking' ),
+        $site, $order_id
+    );
+
+    $body = sprintf(
+        __( "Hi %s,\n\n"
+          . "Great news! Your availability request has been approved.\n\n"
           . "─────────────────────────\n"
           . "BOOKING SUMMARY\n"
           . "─────────────────────────\n"

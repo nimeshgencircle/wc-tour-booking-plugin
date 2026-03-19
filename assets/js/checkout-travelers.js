@@ -62,6 +62,7 @@
         var maxAvail = tour.available > 0 ? Math.min(tour.max_travelers, tour.available) : 1;
         var initial  = Math.min(tour.initial_count || 1, maxAvail);
         state[tour.product_id] = { count: initial, travelers: [] };
+        enforceSoloSingle(tour.product_id);
     });
 
     /* ── Utilities ────────────────────────────────────────────────── */
@@ -160,6 +161,20 @@
             // Sync the DOM for the partner
             syncRoomDOM(pid, partner);
         }
+    }
+
+    /**
+     * When the traveler count is odd the last traveler has no room partner
+     * and must always be Single. This also covers count = 1.
+     * Call after any count change and during initial render.
+     */
+    function enforceSoloSingle(pid) {
+        var count = state[pid].count;
+        if (count % 2 === 0) return; // even count → all paired, nothing to do
+        var soloIdx = count - 1;
+        if (!state[pid].travelers[soloIdx]) state[pid].travelers[soloIdx] = {};
+        state[pid].travelers[soloIdx].room_type     = 'single';
+        state[pid].travelers[soloIdx].auto_upgraded = false; // not auto — it's forced
     }
 
     /**
@@ -268,7 +283,6 @@
 
         /* Top bar */
         // Cap the dropdown at available seats for this specific date.
-        console.log(tour);
         var maxOpts = (tour.available > 0)
             ? Math.min(tour.max_travelers, tour.available)
             : 0;
@@ -335,23 +349,34 @@
         var mod      = roomType === 'single' ? 'wctb-badge--single' : 'wctb-badge--shared';
         var autoNote = (isAuto && roomType === 'single') ? ' <em class="wctb-auto-note">(auto)</em>' : '';
 
+        // Solo = last traveler when count is odd (including count = 1). Always Single.
+        var isSolo   = (idx === state[pid].count - 1) && (state[pid].count % 2 !== 0);
+
         var roomHtml = '';
         if (tour.room_enabled) {
-            roomHtml =
-                '<div class="wctb-co-field wctb-co-field--room">' +
-                    '<label class="wctb-co-label">' + i18n.room_pref + '</label>' +
-                    '<div class="wctb-room-select-wrap">' +
-                        '<select class="wctb-co-input wctb-co-room" ' +
-                                'data-pid="' + pid + '" data-idx="' + idx + '" ' +
-                                'id="wctb-room-' + pid + '-' + idx + '">' +
-                            '<option value="shared"' + (roomType === 'shared' ? ' selected' : '') + '>' +
-                                i18n.shared_room + '</option>' +
-                            '<option value="single"' + (roomType === 'single' ? ' selected' : '') + '>' +
-                                i18n.single_room + (tour.supplement > 0 ? ' (+' + fmt(tour.supplement) + ')' : '') +
-                            '</option>' +
-                        '</select>' +
-                    '</div>' +
-                '</div>';
+            if (isSolo) {
+                // Solo traveler has no room partner — always charged Single supplement.
+                // Render as hidden input so the value is serialized without showing a dropdown.
+                roomHtml = '<input type="hidden" class="wctb-co-room" ' +
+                               'id="wctb-room-' + pid + '-' + idx + '" ' +
+                               'data-pid="' + pid + '" data-idx="' + idx + '" value="single">';
+            } else {
+                roomHtml =
+                    '<div class="wctb-co-field wctb-co-field--room">' +
+                        '<label class="wctb-co-label">' + i18n.sharing_pref + '</label>' +
+                        '<div class="wctb-room-select-wrap">' +
+                            '<select class="wctb-co-input wctb-co-room" ' +
+                                    'data-pid="' + pid + '" data-idx="' + idx + '" ' +
+                                    'id="wctb-room-' + pid + '-' + idx + '">' +
+                                '<option value="shared"' + (roomType === 'shared' ? ' selected' : '') + '>' +
+                                    i18n.shared_room + '</option>' +
+                                '<option value="single"' + (roomType === 'single' ? ' selected' : '') + '>' +
+                                    i18n.single_room + (tour.supplement > 0 ? ' (+' + fmt(tour.supplement) + ')' : '') +
+                                '</option>' +
+                            '</select>' +
+                        '</div>' +
+                    '</div>';
+            }
         }
 
         return '<div class="wctb-co-traveler" id="wctb-t-' + pid + '-' + idx + '" data-idx="' + idx + '" data-pid="' + pid + '">' +
@@ -449,6 +474,11 @@
         var $wrap = $('#wctb-checkout-travelers-wrap');
         if (!$wrap.length) return;
 
+        // Enforce solo-single in state before building HTML so pricing is correct
+        c.tour_items.forEach(function (tour) {
+            enforceSoloSingle(tour.product_id);
+        });
+
         var html = '<div class="wctb-co-wrap">';
         c.tour_items.forEach(function (tour) {
             html +=
@@ -460,6 +490,11 @@
 
         $wrap.html(html);
         serializeToHidden();
+
+        // Refresh pricing display now that solo-single state is set
+        c.tour_items.forEach(function (tour) {
+            updatePricingDisplay(tour.product_id);
+        });
     }
 
     /* ── Collect DOM → state → hidden field ───────────────────────── */
@@ -509,6 +544,9 @@
 
         collectFromDOM();
 
+        // Force last traveler to single when count is odd (no room partner)
+        enforceSoloSingle(pid);
+
         // Rebuild forms
         var tour  = c.tour_items.find(function (t) { return t.product_id == pid; });
         var $forms = $('#wctb-forms-' + pid);
@@ -518,8 +556,10 @@
         }
         $forms.html(html);
 
-        // Re-apply cascade for all pairs after count change
-        for (var j = 0; j < count; j++) {
+        // Re-apply cascade for all paired travelers after count change
+        // (skip the solo last traveler — enforceSoloSingle already handled it)
+        var pairedCount = count % 2 === 0 ? count : count - 1;
+        for (var j = 0; j < pairedCount; j++) {
             var t = state[pid].travelers[j] || {};
             if (t.room_type === 'single') {
                 applyRoomCascade(pid, j, 'single');

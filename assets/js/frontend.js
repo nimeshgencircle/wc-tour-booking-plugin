@@ -82,22 +82,29 @@
     });
 
     $(document).on('click', '#wctb-inq-submit', function () {
-        var name  = $('#wctb-inq-name').val().trim();
-        var email = $('#wctb-inq-email').val().trim();
-        var date  = $('#wctb-inquiry-date').val();
-        var $msg  = $('#wctb-inq-message-feedback');
+        var firstName = $('#wctb-inq-first-name').val().trim();
+        var lastName  = $('#wctb-inq-last-name').val().trim();
+        var email     = $('#wctb-inq-email').val().trim();
+        var phone     = $('#wctb-inq-phone').val().trim();
+        var travelers = parseInt($('#wctb-inq-travelers').val()) || 1;
+        var message   = $('#wctb-inq-message').val().trim();
+        var date      = $('#wctb-inquiry-date').val();
+        var $msg      = $('#wctb-inq-message-feedback');
 
-        if (!name || !email) { showMessage($msg, d.i18n.fill_required, 'error'); return; }
+        if (!firstName || !lastName || !email) { showMessage($msg, d.i18n.fill_required, 'error'); return; }
 
         $(this).prop('disabled', true);
         $.post(d.ajax_url, {
             action:     'wctb_submit_inquiry',
             nonce:      d.inquiry_nonce,
             product_id: d.product_id,
-            name:       name,
+            first_name: firstName,
+            last_name:  lastName,
             email:      email,
-            phone:      $('#wctb-inq-phone').val().trim(),
-            message:    (date ? 'Date: ' + date + '\n' : '') + $('#wctb-inq-message').val().trim(),
+            phone:      phone,
+            travelers:  travelers,
+            message:    message,
+            date:       date,
         }, function (r) {
             showMessage($msg, r.data.message, r.success ? 'success' : 'error');
         }).fail(function () {
@@ -110,34 +117,47 @@
     /* ─── Begin Custom Journey (per-date row) ─────────────────────── */
     $(document).on('click', '.wctb-btn-custom-journey', function () {
         var date = $(this).data('date') || '';
-        if (date) {
-            // Pre-fill preferred date with the start portion of "YYYY-MM-DD to YYYY-MM-DD"
-            var startDate = date.split(' to ')[0] || date;
-            $('#wctb-cj-preferred-date').val(startDate);
-        }
+        $('#wctb-cj-travel-date').val(date);
         showModal('wctb-custom-journey-modal');
     });
 
     $(document).on('click', '#wctb-cj-submit', function () {
-        var name      = $('#wctb-cj-name').val().trim();
-        var email     = $('#wctb-cj-email').val().trim();
-        var prefDate  = $('#wctb-cj-preferred-date').val().trim();
-        var travelers = parseInt($('#wctb-cj-travelers').val()) || 1;
-        var message   = $('#wctb-cj-message').val().trim();
-        var $msg      = $('#wctb-cj-message-feedback');
+        var firstName     = $('#wctb-cj-first-name').val().trim();
+        var lastName      = $('#wctb-cj-last-name').val().trim();
+        var phone         = $('#wctb-cj-phone').val().trim();
+        var contactMethod = $('#wctb-cj-contact-method').val().trim();
+        var destination   = $('#wctb-cj-destination').val().trim();
+        var priorities    = $('#wctb-cj-priorities').val().trim();
+        var travelStyle   = $('#wctb-cj-travel-style').val().trim();
+        var budget        = $('#wctb-cj-budget').val().trim();
+        var travelers     = parseInt($('#wctb-cj-travelers').val()) || 1;
+        var travelWhen    = $('#wctb-cj-travel-when').val().trim();
+        var notes         = $('#wctb-cj-notes').val().trim();
+        var travelDate    = $('#wctb-cj-travel-date').val();
+        var $msg          = $('#wctb-cj-message-feedback');
 
-        if (!name || !email) { showMessage($msg, d.i18n.fill_required, 'error'); return; }
+        if (!firstName || !lastName || !phone || !contactMethod || !destination) {
+            showMessage($msg, d.i18n.fill_required, 'error');
+            return;
+        }
 
         $(this).prop('disabled', true);
         $.post(d.ajax_url, {
             action:          'wctb_submit_custom_journey',
             nonce:           d.journey_nonce,
             product_id:      d.product_id,
-            name:            name,
-            email:           email,
-            preferred_date:  prefDate,
+            first_name:      firstName,
+            last_name:       lastName,
+            phone:           phone,
+            contact_method:  contactMethod,
+            destination:     destination,
+            priorities:      priorities,
+            travel_style:    travelStyle,
+            budget:          budget,
             travelers:       travelers,
-            message:         message,
+            travel_when:     travelWhen,
+            notes:           notes,
+            travel_date:     travelDate,
         }, function (r) {
             showMessage($msg, r.data.message, r.success ? 'success' : 'error');
         }).fail(function () {

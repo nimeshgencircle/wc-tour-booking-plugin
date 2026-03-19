@@ -12,7 +12,7 @@ WordPress plugin that extends WooCommerce for tour booking. Requires WordPress 5
 
 - Place directory in `/wp-content/plugins/` of a WordPress installation with WooCommerce active
 - Activate via WordPress admin → Plugins
-- Plugin creates two custom DB tables on activation: `wp_wctb_waitlist` and `wp_wctb_inquiry`
+- Plugin creates two custom post type(CPT) : `wctb_waitlist`, `wctb_availability` and  `wctb_custom_journey`
 - Global settings: WooCommerce → Tour Settings
 - Per-product config: Product edit → "Tour Settings" tab
 
