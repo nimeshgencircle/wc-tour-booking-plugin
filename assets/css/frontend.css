@@ -592,6 +592,27 @@
     grid-column: 1 / -1;
 }
 
+/* Room Preference field spans full width */
+.wctb-co-field--room-pref {
+    grid-column: 1 / -1;
+}
+
+/* Locked sharing preference display for second traveler */
+.wctb-sharing-pref-locked {
+    padding: 8px 0;
+    font-size: 14px;
+    color: #555;
+    border-bottom: 1.5px solid #ececec;
+}
+
+/* Read-only mirror for second traveler */
+.wctb-room-pref-mirror {
+    padding: 8px 0;
+    font-size: 14px;
+    color: #555;
+    border-bottom: 1.5px solid #ececec;
+}
+
 .wctb-co-label {
     font-size: 11px;
     font-weight: 700;
@@ -745,6 +766,7 @@ select.wctb-co-input {
     .wctb-co-room-legend   { padding-left: 16px; padding-right: 16px; }
     .wctb-co-topbar        { flex-direction: column; align-items: flex-start; }
     .wctb-co-pricing-bar   { width: 100%; justify-content: space-between; }
-    .wctb-co-field--room   { grid-column: 1; }
+    .wctb-co-field--room,
+    .wctb-co-field--room-pref { grid-column: 1; }
     .wctb-legend-pairs     { flex-direction: column; }
 }

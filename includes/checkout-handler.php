@@ -204,14 +204,16 @@ function wctb_save_order_pay_traveler_data( $order ) {
 
             $sanitized = array_map( function( $t ) {
                 return [
-                    'first_name' => sanitize_text_field( $t['first_name'] ?? '' ),
-                    'last_name'  => sanitize_text_field( $t['last_name']  ?? '' ),
-                    'name'       => sanitize_text_field( ( $t['first_name'] ?? '' ) . ' ' . ( $t['last_name'] ?? '' ) ),
-                    'email'      => sanitize_email(      $t['email']      ?? '' ),
-                    'phone'      => sanitize_text_field( $t['phone']      ?? '' ),
-                    'age'        => absint(              $t['age']        ?? 0  ),
-                    'room_type'  => in_array( $t['room_type'] ?? 'shared', [ 'shared', 'single' ] )
-                                        ? $t['room_type'] : 'shared',
+                    'first_name'      => sanitize_text_field( $t['first_name'] ?? '' ),
+                    'last_name'       => sanitize_text_field( $t['last_name']  ?? '' ),
+                    'name'            => sanitize_text_field( ( $t['first_name'] ?? '' ) . ' ' . ( $t['last_name'] ?? '' ) ),
+                    'email'           => sanitize_email(      $t['email']      ?? '' ),
+                    'phone'           => sanitize_text_field( $t['phone']      ?? '' ),
+                    'age'             => absint(              $t['age']        ?? 0  ),
+                    'room_type'       => in_array( $t['room_type'] ?? 'shared', [ 'shared', 'single' ] )
+                                            ? $t['room_type'] : 'shared',
+                    'room_preference' => in_array( $t['room_preference'] ?? 'queen', [ 'queen', 'twin' ] )
+                                            ? $t['room_preference'] : 'queen',
                 ];
             }, $group['travelers'] ?? [] );
 

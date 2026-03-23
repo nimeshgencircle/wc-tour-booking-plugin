@@ -61,7 +61,13 @@
         // Clamp to available seats so a stale quantity can't exceed current capacity.
         var maxAvail = tour.available > 0 ? Math.min(tour.max_travelers, tour.available) : 1;
         var initial  = Math.min(tour.initial_count || 1, maxAvail);
-        state[tour.product_id] = { count: initial, travelers: [] };
+        // Pre-initialise traveler state so room_type defaults to 'shared'
+        // for all paired slots (odd last traveler is corrected by enforceSoloSingle)
+        var travelers = [];
+        for (var t = 0; t < initial; t++) {
+            travelers.push({ room_type: 'shared', auto_upgraded: false, room_preference: 'queen' });
+        }
+        state[tour.product_id] = { count: initial, travelers: travelers };
         enforceSoloSingle(tour.product_id);
     });
 
@@ -141,22 +147,11 @@
         st.travelers[idx].room_type = newRoom;
         st.travelers[idx].auto_upgraded = false;
 
-        // Only cascade if the partner exists
+        // Partner always mirrors the lead — spec: second traveler is locked to lead's choice
         if (partner < count) {
             if (!st.travelers[partner]) st.travelers[partner] = {};
-
-            if (newRoom === 'single') {
-                // Cascade: force partner to single
-                st.travelers[partner].room_type = 'single';
-                st.travelers[partner].auto_upgraded = true;
-            } else {
-                // Reverted to shared: un-auto the partner only if they
-                // were auto-upgraded (user may have manually set them)
-                if (st.travelers[partner].auto_upgraded) {
-                    st.travelers[partner].room_type = 'shared';
-                    st.travelers[partner].auto_upgraded = false;
-                }
-            }
+            st.travelers[partner].room_type     = newRoom;
+            st.travelers[partner].auto_upgraded = (newRoom === 'single');
 
             // Sync the DOM for the partner
             syncRoomDOM(pid, partner);
@@ -186,15 +181,57 @@
         var traveler = st.travelers[idx] || {};
         var roomType = traveler.room_type || 'shared';
         var auto     = traveler.auto_upgraded || false;
+        var info     = pairInfo(idx);
 
-        var $block  = $('#wctb-t-' + pid + '-' + idx);
-        var $select = $block.find('.wctb-co-room');
+        var $block = $('#wctb-t-' + pid + '-' + idx);
 
-        // Update select value silently (no re-trigger)
-        $select.val(roomType);
+        if (info.slot === 1) {
+            // Second traveler: update hidden input + locked display text
+            $block.find('.wctb-co-room').val(roomType);
+            var tour = c.tour_items.find(function (t) { return t.product_id == pid; });
+            var sharingLabel = roomType === 'single'
+                ? c.i18n.single_room + (tour && tour.supplement > 0 ? ' (+' + fmt(tour.supplement) + ')' : '')
+                : c.i18n.shared_room;
+            var lockNote = roomType === 'single'
+                ? '(forced)'
+                : '(with Traveler ' + (info.partner + 1) + ')';
+            $('#wctb-sharing-locked-' + pid + '-' + idx).html(
+                escHtml(sharingLabel) + ' <em class="wctb-auto-note">' + escHtml(lockNote) + '</em>'
+            );
+        } else {
+            // Lead traveler: update select value silently
+            $block.find('.wctb-co-room').val(roomType);
+        }
 
         // Refresh the pair badge
         refreshPairBadge(pid, idx, roomType, auto);
+
+        // Sync room-preference visibility
+        var $rpWrap = $('#wctb-rpw-' + pid + '-' + idx);
+        var info    = pairInfo(idx);
+        if (info.slot === 0) {
+            // Lead: show pref field only when shared
+            if (roomType === 'shared') { $rpWrap.show(); } else { $rpWrap.hide(); }
+        } else {
+            // Second: show pref mirror only when shared
+            if (roomType === 'shared') { $rpWrap.show(); } else { $rpWrap.hide(); }
+            // Also refresh mirror text to reflect current lead choice
+            syncRoomPrefMirror(pid, idx);
+        }
+    }
+
+    /**
+     * Update the read-only room-preference mirror for a second-slot traveler.
+     * partnerIdx must be slot 1 (the non-lead traveler).
+     */
+    function syncRoomPrefMirror(pid, partnerIdx) {
+        var leadIdx  = pairInfo(partnerIdx).partner;
+        var leadPref = (state[pid].travelers[leadIdx] || {}).room_preference || 'queen';
+        var i18n     = c.i18n;
+        var label    = leadPref === 'twin' ? i18n.twin_beds : i18n.queen_bed;
+        $('#wctb-rp-' + pid + '-' + partnerIdx).html(
+            escHtml(label) + ' <em class="wctb-auto-note">(same as Traveler ' + (leadIdx + 1) + ')</em>'
+        );
     }
 
     /**
@@ -353,6 +390,7 @@
         var isSolo   = (idx === state[pid].count - 1) && (state[pid].count % 2 !== 0);
 
         var roomHtml = '';
+        var roomPrefHtml = '';
         if (tour.room_enabled) {
             if (isSolo) {
                 // Solo traveler has no room partner — always charged Single supplement.
@@ -360,7 +398,8 @@
                 roomHtml = '<input type="hidden" class="wctb-co-room" ' +
                                'id="wctb-room-' + pid + '-' + idx + '" ' +
                                'data-pid="' + pid + '" data-idx="' + idx + '" value="single">';
-            } else {
+            } else if (info.slot === 0) {
+                // Lead traveler: interactive select — free choice
                 roomHtml =
                     '<div class="wctb-co-field wctb-co-field--room">' +
                         '<label class="wctb-co-label">' + i18n.sharing_pref + '</label>' +
@@ -376,6 +415,55 @@
                             '</select>' +
                         '</div>' +
                     '</div>';
+            } else {
+                // Second traveler (slot 1): locked — always mirrors lead
+                var leadIdx   = info.partner;
+                var sharingLabel = roomType === 'single'
+                    ? i18n.single_room + (tour.supplement > 0 ? ' (+' + fmt(tour.supplement) + ')' : '')
+                    : i18n.shared_room;
+                var lockNote  = roomType === 'single'
+                    ? '(forced)'
+                    : '(with Traveler ' + (leadIdx + 1) + ')';
+                roomHtml =
+                    '<input type="hidden" class="wctb-co-room" ' +
+                        'id="wctb-room-' + pid + '-' + idx + '" ' +
+                        'data-pid="' + pid + '" data-idx="' + idx + '" value="' + escAttr(roomType) + '">' +
+                    '<div class="wctb-co-field wctb-co-field--room">' +
+                        '<label class="wctb-co-label">' + i18n.sharing_pref + '</label>' +
+                        '<div class="wctb-sharing-pref-locked" id="wctb-sharing-locked-' + pid + '-' + idx + '">' +
+                            escHtml(sharingLabel) + ' <em class="wctb-auto-note">' + escHtml(lockNote) + '</em>' +
+                        '</div>' +
+                    '</div>';
+            }
+
+            // ── Room Preference — shown for all non-solo travelers ────────────
+            if (!isSolo) {
+                var rpStyle = roomType === 'shared' ? '' : ' style="display:none;"';
+                if (info.slot === 0) {
+                    // Lead traveler: editable select
+                    var roomPref = saved.room_preference || 'queen';
+                    roomPrefHtml =
+                        '<div class="wctb-co-field wctb-co-field--room-pref" id="wctb-rpw-' + pid + '-' + idx + '"' + rpStyle + '>' +
+                            '<label class="wctb-co-label" for="wctb-rp-' + pid + '-' + idx + '">' + escHtml(i18n.room_pref) + '</label>' +
+                            '<select class="wctb-co-input wctb-co-room-pref" ' +
+                                    'id="wctb-rp-' + pid + '-' + idx + '" ' +
+                                    'data-pid="' + pid + '" data-idx="' + idx + '">' +
+                                '<option value="queen"' + (roomPref === 'queen' ? ' selected' : '') + '>' + escHtml(i18n.queen_bed) + '</option>' +
+                                '<option value="twin"'  + (roomPref === 'twin'  ? ' selected' : '') + '>' + escHtml(i18n.twin_beds)  + '</option>' +
+                            '</select>' +
+                        '</div>';
+                } else {
+                    // Second traveler: read-only mirror of lead's choice
+                    var leadPref = (state[pid].travelers[info.partner] || {}).room_preference || 'queen';
+                    var prefLabel = leadPref === 'twin' ? i18n.twin_beds : i18n.queen_bed;
+                    roomPrefHtml =
+                        '<div class="wctb-co-field wctb-co-field--room-pref" id="wctb-rpw-' + pid + '-' + idx + '"' + rpStyle + '>' +
+                            '<label class="wctb-co-label">' + escHtml(i18n.room_pref) + '</label>' +
+                            '<div class="wctb-room-pref-mirror" id="wctb-rp-' + pid + '-' + idx + '">' +
+                                escHtml(prefLabel) + ' <em class="wctb-auto-note">(same as Traveler ' + (info.partner + 1) + ')</em>' +
+                            '</div>' +
+                        '</div>';
+                }
             }
         }
 
@@ -423,6 +511,7 @@
                            'placeholder="' + escAttr(i18n.age) + '" min="1" max="120" />' +
                 '</div>' +
                 roomHtml +
+                roomPrefHtml +
             '</div>' +
         '</div>';
     }
@@ -517,6 +606,16 @@
                 if (!state[pid].travelers[i].room_type) {
                     state[pid].travelers[i].room_type = $b.find('.wctb-co-room').val() || 'shared';
                 }
+                // room_preference: only lead travelers (slot 0) have the select; sync to partner
+                if (pairInfo(i).slot === 0) {
+                    var prefVal = $b.find('.wctb-co-room-pref').val() || state[pid].travelers[i].room_preference || 'queen';
+                    state[pid].travelers[i].room_preference = prefVal;
+                    var partnerI = pairInfo(i).partner;
+                    if (partnerI < count) {
+                        if (!state[pid].travelers[partnerI]) state[pid].travelers[partnerI] = {};
+                        state[pid].travelers[partnerI].room_preference = prefVal;
+                    }
+                }
             }
         });
     }
@@ -588,18 +687,38 @@
         var idx     = parseInt($sel.data('idx'));
         var newRoom = $sel.val();
 
+        // Only lead travelers (slot 0) drive sharing preference — partner is always locked
+        if (pairInfo(idx).slot !== 0) return;
+
         // Run cascade — updates state for idx and partner
         applyRoomCascade(pid, idx, newRoom);
 
         // Refresh badge for changed traveler
-        var t = state[pid].travelers[idx] || {};
+        var t    = state[pid].travelers[idx] || {};
+        var info = pairInfo(idx);
         refreshPairBadge(pid, idx, t.room_type || 'shared', t.auto_upgraded || false);
 
-        // Refresh badge for partner
-        var partner = pairInfo(idx).partner;
+        // Show/hide Room Preference for changed traveler
+        var $rpWrap = $('#wctb-rpw-' + pid + '-' + idx);
+        if (info.slot === 0 && (t.room_type || 'shared') === 'shared') {
+            $rpWrap.show();
+        } else {
+            $rpWrap.hide();
+        }
+
+        // Refresh badge and room-pref visibility for partner
+        var partner = info.partner;
         if (partner < state[pid].count) {
             var tp = state[pid].travelers[partner] || {};
             refreshPairBadge(pid, partner, tp.room_type || 'shared', tp.auto_upgraded || false);
+
+            var $rpWrapP = $('#wctb-rpw-' + pid + '-' + partner);
+            if ((tp.room_type || 'shared') === 'shared') {
+                $rpWrapP.show();
+                syncRoomPrefMirror(pid, partner);
+            } else {
+                $rpWrapP.hide();
+            }
         }
 
         updatePricingDisplay(pid);
@@ -608,6 +727,30 @@
 
         // Refresh WooCommerce order review totals (right column)
         triggerWooUpdate();
+    });
+
+    /**
+     * Room Preference select changed (lead traveler only).
+     * Updates state and syncs the partner's read-only mirror.
+     */
+    $(document).on('change', '.wctb-co-room-pref', function () {
+        var $sel    = $(this);
+        var pid     = $sel.data('pid');
+        var idx     = parseInt($sel.data('idx'));
+        var pref    = $sel.val();
+
+        if (!state[pid].travelers[idx]) state[pid].travelers[idx] = {};
+        state[pid].travelers[idx].room_preference = pref;
+
+        // Mirror to partner (slot 1) and update their read-only display
+        var partner = pairInfo(idx).partner;
+        if (partner < state[pid].count) {
+            if (!state[pid].travelers[partner]) state[pid].travelers[partner] = {};
+            state[pid].travelers[partner].room_preference = pref;
+            syncRoomPrefMirror(pid, partner);
+        }
+
+        serializeToHidden();
     });
 
     /** All text/number inputs → serialize on change */

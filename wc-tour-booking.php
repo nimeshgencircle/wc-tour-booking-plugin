@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: WooCommerce Tour Booking
- * Plugin URI:  https://yoursite.com/wc-tour-booking
+ * Plugin URI:  https://encircletechnologies.com/
  * Description: Extends WooCommerce with full tour booking functionality: traveler management, room selection, waitlist, inquiry, and seat availability.
  * Version:     1.0.0
- * Author:      Your Name
- * Author URI:  https://yoursite.com
+ * Author:      Encircle Technologies
+ * Author URI:  https://encircletechnologies.com/
  * Text Domain: wc-tour-booking
  * Domain Path: /languages
  * Requires at least: 5.8
