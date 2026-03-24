@@ -38,6 +38,26 @@
     $(document).on('click', '.wctb-btn-waitlist', function () {
         var date = $(this).data('date') || '';
         $('#wctb-waitlist-date').val(date);
+
+
+        if (date.indexOf(' to ') !== -1) {
+            var parts = date.split(' to ');
+
+            var formatDate = function (dateStr) {
+                var d = new Date(dateStr);
+                var month = d.getMonth() + 1;         // No leading zero (m)
+                var day   = d.getDate();               // No leading zero (d)
+                var year  = d.getFullYear();           // 4-digit year (Y)
+                return month + '/' + day + '/' + year;
+            };
+
+            var departureFormatted = formatDate(parts[0].trim());  // 7/1/2026
+            var returnFormatted    = formatDate(parts[1].trim());  // 8/1/2026
+
+            $(".wctb-waitlist-departure-date").text(departureFormatted);
+            $(".wctb-waitlist-return-date").text(returnFormatted);
+        }
+
         showModal('wctb-waitlist-modal');
     });
 
@@ -50,6 +70,10 @@
         var message   = $('#wctb-wl-message-text').val().trim();
         var date      = $('#wctb-waitlist-date').val();
         var $feedback = $('#wctb-wl-message');
+        var contact_method = $('#wctb-wl-contact-method').val().trim();
+        var announcements = $('#wctb-wl-announcements').is(':checked');
+
+
 
         if (!firstName || !lastName || !email) { showMessage($feedback, d.i18n.fill_required, 'error'); return; }
 
@@ -65,8 +89,15 @@
             travelers:  travelers,
             message:    message,
             date:       date,
+            contact_method: contact_method,
+            announcements: announcements
+            
         }, function (r) {
             showMessage($feedback, r.data.message, r.success ? 'success' : 'error');
+            // empty value
+            $('#wctb-wl-message-text, #wctb-wl-first-name, #wctb-wl-last-name, #wctb-wl-email, #wctb-wl-phone, #wctb-wl-travelers, #wctb-wl-message-text, #wctb-waitlist-date').val('');
+
+
         }).fail(function () {
             showMessage($feedback, d.i18n.error, 'error');
         }).always(function () {
@@ -78,6 +109,25 @@
     $(document).on('click', '.wctb-btn-inquiry', function () {
         var date = $(this).data('date') || '';
         $('#wctb-inquiry-date').val(date);
+
+        if (date.indexOf(' to ') !== -1) {
+            var parts = date.split(' to ');
+
+            var formatDate = function (dateStr) {
+                var d = new Date(dateStr);
+                var month = d.getMonth() + 1;         // No leading zero (m)
+                var day   = d.getDate();               // No leading zero (d)
+                var year  = d.getFullYear();           // 4-digit year (Y)
+                return month + '/' + day + '/' + year;
+            };
+
+            var departureFormatted = formatDate(parts[0].trim());  // 7/1/2026
+            var returnFormatted    = formatDate(parts[1].trim());  // 8/1/2026
+
+            $(".wctb-waitlist-departure-date").text(departureFormatted);
+            $(".wctb-waitlist-return-date").text(returnFormatted);
+        }
+
         showModal('wctb-inquiry-modal');
     });
 
@@ -90,6 +140,8 @@
         var message   = $('#wctb-inq-message').val().trim();
         var date      = $('#wctb-inquiry-date').val();
         var $msg      = $('#wctb-inq-message-feedback');
+        var contact_method = $('#wctb-inq-contact-method').val().trim();
+        var announcements = $('#wctb-inq-announcements').is(':checked');
 
         if (!firstName || !lastName || !email) { showMessage($msg, d.i18n.fill_required, 'error'); return; }
 
@@ -105,8 +157,13 @@
             travelers:  travelers,
             message:    message,
             date:       date,
+            contact_method: contact_method,
+            announcements: announcements
         }, function (r) {
             showMessage($msg, r.data.message, r.success ? 'success' : 'error');
+            // empty value
+            $('#wctb-inq-first-name, #wctb-inq-last-name, #wctb-inq-email, #wctb-inq-phone, #wctb-inq-travelers, #wctb-inq-message, #wctb-inquiry-date').val('');
+
         }).fail(function () {
             showMessage($msg, d.i18n.error, 'error');
         }).always(function () {
@@ -160,6 +217,9 @@
             travel_date:     travelDate,
         }, function (r) {
             showMessage($msg, r.data.message, r.success ? 'success' : 'error');
+            // empty value
+            $('#wctb-cj-first-name, #wctb-cj-last-name, #wctb-cj-phone, #wctb-cj-contact-method, #wctb-cj-destination, #wctb-cj-priorities, #wctb-cj-travel-style, #wctb-cj-budget, #wctb-cj-travelers, #wctb-cj-travel-when, #wctb-cj-notes').val('');
+
         }).fail(function () {
             showMessage($msg, d.i18n.error, 'error');
         }).always(function () {

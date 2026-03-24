@@ -78,6 +78,10 @@ function wctb_handle_waitlist_submit() {
     $travelers   = absint(                    $_POST['travelers']   ?? 1   );
     $message     = sanitize_textarea_field(   $_POST['message']     ?? ''  );
     $travel_date = sanitize_text_field(       $_POST['date']        ?? ''  );
+    $contact_method = sanitize_text_field(   $_POST['contact_method']     ?? ''  );
+    $announcements = sanitize_text_field(   $_POST['announcements']     ?? ''  );
+
+
 
     if ( ! $product_id || ! $first_name || ! $last_name || ! is_email( $email ) ) {
         wp_send_json_error( [ 'message' => __( 'Please fill in all required fields.', 'wc-tour-booking' ) ] );
@@ -105,13 +109,33 @@ function wctb_handle_waitlist_submit() {
         '_wctb_wl_phone'       => $phone,
         '_wctb_wl_travelers'   => $travelers,
         '_wctb_wl_message'     => $message,
+        '_wctb_wl_contact_method' => $contact_method,   
+        '_wctb_announcements'=> $announcements,    
         '_wctb_wl_status'      => 'pending',
     ];
     foreach ( $meta as $key => $value ) {
         update_post_meta( $post_id, $key, $value );
     }
 
+    $mailer = WC()->mailer();
+ 
+    $subject = sprintf( __( '[%s] New Waitlist Submission – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), $tour_name );
+
+    // Your message content
+    $message = sprintf(
+            "Name: %s %s\nEmail: %s\nPhone: %s\nTravelers: %d\nTravel Date: %s\nTour: %s\nMessage: %s\n\nManage: %s",
+            $first_name, $last_name, $email, $phone, $travelers, $travel_date, $tour_name, $message,
+            admin_url( 'edit.php?post_type=wctb_waitlist' )
+        );
+
+    // Wrap message with WooCommerce template (header + footer)
+    $wrapped_message = $mailer->wrap_message($subject, $message);
+
+    // Send email
+    $mailer->send(get_option( 'admin_email' ), $subject, $wrapped_message);
+
     // Notify admin
+    /*
     wp_mail(
         get_option( 'admin_email' ),
         sprintf( __( '[%s] New Waitlist Submission – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), $tour_name ),
@@ -130,7 +154,21 @@ function wctb_handle_waitlist_submit() {
             __( "Hi %s,\n\nThank you for joining the waitlist for %s.\nWe will notify you as soon as a spot becomes available.\n\nBest regards,\n%s", 'wc-tour-booking' ),
             $first_name, $tour_name, get_bloginfo( 'name' )
         )
-    );
+    );*/
+
+    $subject = sprintf( __( '[%s] Waitlist Confirmation – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), $tour_name );
+
+    // Your message content
+    $message = sprintf(
+            __( "Hi %s,\n\nThank you for joining the waitlist for %s.\nWe will notify you as soon as a spot becomes available.\n\nBest regards,\n%s", 'wc-tour-booking' ),
+            $first_name, $tour_name, get_bloginfo( 'name' )
+        );
+
+    // Wrap message with WooCommerce template (header + footer)
+    $wrapped_message = $mailer->wrap_message($subject, $message);
+
+    // Send email
+    $mailer->send($email, $subject, $wrapped_message);
 
     wp_send_json_success( [ 'message' => __( "You've been added to the waitlist! We'll contact you if a spot opens up.", 'wc-tour-booking' ) ] );
 }
@@ -237,6 +275,8 @@ function wctb_waitlist_meta_box_html( $post ) {
         '_wctb_wl_phone'       => [ 'label' => __( 'Phone Number',        'wc-tour-booking' ), 'type' => 'tel'      ],
         '_wctb_wl_travelers'   => [ 'label' => __( 'Number of Travelers', 'wc-tour-booking' ), 'type' => 'number'   ],
         '_wctb_wl_message'     => [ 'label' => __( 'Message',             'wc-tour-booking' ), 'type' => 'textarea' ],
+        '_wctb_wl_contact_method' => [ 'label' => __( 'Contact Method',             'wc-tour-booking' ), 'type' => 'text'     ],
+        '_wctb_announcements'=> [ 'label' => __( 'Is Announcements',             'wc-tour-booking' ), 'type' => 'text' ],
     ];
 
     echo '<table class="form-table"><tbody>';
@@ -336,6 +376,7 @@ function wctb_create_order_from_waitlist( int $post_id ) {
     $email       =       get_post_meta( $post_id, '_wctb_wl_email',       true );
     $phone       =       get_post_meta( $post_id, '_wctb_wl_phone',       true );
     $travelers   = max( 1, (int) get_post_meta( $post_id, '_wctb_wl_travelers', true ) );
+    $travelers   = 1;
     $travel_date =       get_post_meta( $post_id, '_wctb_wl_travel_date', true );
 
     $product = wc_get_product( $product_id );
@@ -382,12 +423,15 @@ function wctb_send_waitlist_approval_email( int $post_id, $order ) {
     $total    = strip_tags( $order->get_formatted_order_total() );
     $site     = get_bloginfo( 'name' );
 
+        $mailer = WC()->mailer();
+
+
     $subject = sprintf(
         __( '[%s] Your waitlist spot is confirmed! – Order #%d', 'wc-tour-booking' ),
         $site, $order_id
     );
 
-    $body = sprintf(
+    $message = sprintf(
         __( "Hi %s,\n\n"
           . "Great news! Your waitlist request has been approved.\n\n"
           . "─────────────────────────\n"
@@ -408,7 +452,14 @@ function wctb_send_waitlist_approval_email( int $post_id, $order ) {
         $order_id, $total, $pay_url, $site
     );
 
-    wp_mail( $email, $subject, $body );
+     $wrapped_message = $mailer->wrap_message($subject, $message);
+
+    // Send email
+    $mailer->send($email, $subject, $wrapped_message);
+
+
+    //wp_mail( $email, $subject, $message );
+
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -518,6 +569,8 @@ function wctb_availability_meta_box_html( $post ) {
         '_wctb_av_phone'       => [ 'label' => __( 'Phone Number',        'wc-tour-booking' ), 'type' => 'tel'      ],
         '_wctb_av_travelers'   => [ 'label' => __( 'Number of Travelers', 'wc-tour-booking' ), 'type' => 'number'   ],
         '_wctb_av_message'     => [ 'label' => __( 'Message',             'wc-tour-booking' ), 'type' => 'textarea' ],
+        '_wctb_av_contact_method' => [ 'label' => __( 'Contact Method',             'wc-tour-booking' ), 'type' => 'text'     ],
+        '_wctb_av_announcements'=> [ 'label' => __( 'Is Announcements',             'wc-tour-booking' ), 'type' => 'text' ],
     ];
 
     echo '<table class="form-table"><tbody>';
@@ -617,6 +670,7 @@ function wctb_create_order_from_availability( int $post_id ) {
     $email       =       get_post_meta( $post_id, '_wctb_av_email',       true );
     $phone       =       get_post_meta( $post_id, '_wctb_av_phone',       true );
     $travelers   = max( 1, (int) get_post_meta( $post_id, '_wctb_av_travelers', true ) );
+    $travelers   = 1;
     $travel_date =       get_post_meta( $post_id, '_wctb_av_travel_date', true );
 
     $product = wc_get_product( $product_id );
@@ -662,12 +716,14 @@ function wctb_send_availability_approval_email( int $post_id, $order ) {
     $total    = strip_tags( $order->get_formatted_order_total() );
     $site     = get_bloginfo( 'name' );
 
+    $mailer = WC()->mailer();
+
     $subject = sprintf(
         __( '[%s] Your availability request is confirmed! – Order #%d', 'wc-tour-booking' ),
         $site, $order_id
     );
 
-    $body = sprintf(
+    $message = sprintf(
         __( "Hi %s,\n\n"
           . "Great news! Your availability request has been approved.\n\n"
           . "─────────────────────────\n"
@@ -688,5 +744,11 @@ function wctb_send_availability_approval_email( int $post_id, $order ) {
         $order_id, $total, $pay_url, $site
     );
 
-    wp_mail( $email, $subject, $body );
+    //wp_mail( $email, $subject, $message );
+   
+    $wrapped_message = $mailer->wrap_message($subject, $message);
+
+    // Send email
+    $mailer->send($email, $subject, $wrapped_message);
+
 }

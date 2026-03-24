@@ -21,6 +21,9 @@ function wctb_handle_inquiry_submit() {
     $travelers   = absint(                  $_POST['travelers']   ?? 1  );
     $message     = sanitize_textarea_field( $_POST['message']     ?? '' );
     $travel_date = sanitize_text_field(     $_POST['date']        ?? '' );
+    $contact_method = sanitize_text_field( $_POST['contact_method'] ?? '' );
+    $announcements   = sanitize_text_field( $_POST['announcements'] ?? '' );
+
 
     if ( ! $product_id || ! $first_name || ! $last_name || ! is_email( $email ) ) {
         wp_send_json_error( [ 'message' => __( 'Please fill in all required fields.', 'wc-tour-booking' ) ] );
@@ -49,31 +52,43 @@ function wctb_handle_inquiry_submit() {
         '_wctb_av_travelers'   => $travelers,
         '_wctb_av_message'     => $message,
         '_wctb_av_status'      => 'pending',
+        '_wctb_av_contact_method' => $contact_method,
+        '_wctb_av_announcements' => $announcements,
     ];
     foreach ( $meta as $key => $value ) {
         update_post_meta( $post_id, $key, $value );
     }
 
-    // Notify admin
-    wp_mail(
-        get_option( 'admin_email' ),
-        sprintf( __( '[%s] New Availability Request – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), $tour_name ),
-        sprintf(
+    $mailer = WC()->mailer();
+
+    // Email subject
+    $subject = sprintf( __( '[%s] New Availability Request – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), $tour_name );
+
+    // Your message content
+    $message = sprintf(
             "Name: %s %s\nEmail: %s\nPhone: %s\nTravelers: %d\nTravel Date: %s\nTour: %s\nMessage: %s\n\nManage: %s",
             $first_name, $last_name, $email, $phone, $travelers, $travel_date, $tour_name, $message,
             admin_url( 'edit.php?post_type=wctb_availability' )
-        )
-    );
+        );
 
+    // Wrap message with WooCommerce template (header + footer)
+    $wrapped_message = $mailer->wrap_message($subject, $message);
+
+    // Notify admin
+    $mailer->send(get_option( 'admin_email' ), $subject, $wrapped_message);
+ 
     // Confirmation to customer
-    wp_mail(
-        $email,
-        sprintf( __( '[%s] Availability Request Received – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), $tour_name ),
-        sprintf(
+
+    $subject = sprintf( __( '[%s] Availability Request Received – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), $tour_name );
+ 
+    $message = sprintf(
             __( "Hi %s,\n\nThank you for your availability request for %s.\nWe will review your request and get back to you shortly.\n\nBest regards,\n%s", 'wc-tour-booking' ),
             $first_name, $tour_name, get_bloginfo( 'name' )
-        )
-    );
+        );
+ 
+    $wrapped_message = $mailer->wrap_message($subject, $message);
+    $mailer->send($email, $subject, $wrapped_message);
+ 
 
     wp_send_json_success( [ 'message' => __( "Thank you! Your request has been received. We'll be in touch shortly.", 'wc-tour-booking' ) ] );
 }
@@ -171,17 +186,21 @@ function wctb_cj_inject_status_options() {
 <script>
     jQuery(function ($) {
         <
-        ? php foreach($custom_statuses as $status => $label):
+        ?
+        php foreach($custom_statuses as $status => $label):
             $selected = $post - > post_status === $status ? ' selected="selected"' : ''; ? >
         $('#post_status').append(
             '<option value="<?php echo esc_js( $status ); ?>"<?php echo $selected; ?>><?php echo esc_js( $label ); ?></option>'
-            ); <
-        ? php
+        ); <
+        ?
+        php
         if ($post - > post_status === $status): ? >
             $('#post-status-display').text('<?php echo esc_js( $label ); ?>'); <
-        ? php endif; ? >
+        ?
+        php endif; ? >
         <
-        ? php endforeach; ? >
+        ?
+        php endforeach; ? >
     });
 </script>
 <?php
@@ -217,6 +236,7 @@ function wctb_cj_details_meta_box( $post ) {
         'wctb_cj_priorities'     => [ __( 'Top 3 Priorities',               'wc-tour-booking' ), 'textarea' ],
         'wctb_cj_travel_style'   => [ __( 'When I travel I…',               'wc-tour-booking' ), 'textarea' ],
         'wctb_cj_notes'          => [ __( 'Anything else we should know?',  'wc-tour-booking' ), 'textarea' ],
+
     ];
     ?>
 <style>
@@ -346,6 +366,7 @@ function wctb_handle_custom_journey_submit() {
     }
 
     // Notify admin
+    /*
     wp_mail(
         get_option( 'admin_email' ),
         sprintf( __( '[%s] New Custom Journey Request – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), "{$first_name} {$last_name}" ),
@@ -356,7 +377,28 @@ function wctb_handle_custom_journey_submit() {
             $notes, $travel_date, $tour_name,
             admin_url( 'edit.php?post_type=wctb_custom_journey' )
         )
-    );
+    );*/
+
+    $mailer = WC()->mailer();
+
+    // Email subject
+    $subject = sprintf( __( '[%s] New Custom Journey Request – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), "{$first_name} {$last_name}" );
+
+    // Your message content
+    $message = sprintf(
+            "Name: %s %s\nPhone: %s\nContact: %s\nDestination: %s\nPriorities: %s\nTravel Style: %s\nBudget: %s\nTravelers: %d\nTravel When: %s\nNotes: %s\nTravel Date: %s\nTour: %s\n\nManage: %s",
+            $first_name, $last_name, $phone, $contact_method, $destination,
+            $priorities, $travel_style, $budget, $travelers, $travel_when,
+            $notes, $travel_date, $tour_name,
+            admin_url( 'edit.php?post_type=wctb_custom_journey' )
+        );
+
+    // Wrap message with WooCommerce template (header + footer)
+    $wrapped_message = $mailer->wrap_message($subject, $message);
+
+    // Send email
+    $mailer->send(get_option( 'admin_email' ), $subject, $wrapped_message);
+
 
     wp_send_json_success( [ 'message' => __( "Thank you! We've received your request and will be in touch soon.", 'wc-tour-booking' ) ] );
 }

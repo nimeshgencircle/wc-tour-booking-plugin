@@ -267,7 +267,20 @@ function wctb_render_waitlist_popup( $product_id ) { ?>
         <button class="wctb-modal__close"
             aria-label="<?php esc_attr_e( 'Close', 'wc-tour-booking' ); ?>">&times;</button>
         <h2><?php esc_html_e( 'Join the Waitlist', 'wc-tour-booking' ); ?></h2>
-        <p><?php esc_html_e( "Leave your details and we'll contact you if a spot opens up.", 'wc-tour-booking' ); ?></p>
+        <p><?php esc_html_e( "If a space opens, you'll be the first to know.", 'wc-tour-booking' ); ?></p>
+
+        <?php 
+        $product = wc_get_product( $product_id );
+
+        echo "<h2>".$product->get_name()."</h2>";
+        echo wc_price($product->get_price());        
+        ?>
+        Departure Date
+        <span class="wctb-waitlist-departure-date"></span>
+        Return Date
+        <span class="wctb-waitlist-return-date"></span>
+
+
         <input type="hidden" id="wctb-waitlist-product-id" value="<?php echo esc_attr( $product_id ); ?>">
         <input type="hidden" id="wctb-waitlist-date" value="">
         <div class="wctb-form-row">
@@ -284,17 +297,37 @@ function wctb_render_waitlist_popup( $product_id ) { ?>
         <div class="wctb-form-group"><label
                 for="wctb-wl-phone"><?php esc_html_e( 'Phone Number', 'wc-tour-booking' ); ?></label><input type="tel"
                 id="wctb-wl-phone" class="wctb-input"></div>
+
         <div class="wctb-form-group">
+            <label for="wctb-wl-contact-method"><?php esc_html_e( 'Method of Contact *', 'wc-tour-booking' ); ?></label>
+            <select id="wctb-wl-contact-method" class="wctb-input" required>
+                <option value=""><?php esc_html_e( '— Select —', 'wc-tour-booking' ); ?></option>
+                <option value="Email"><?php esc_html_e( 'Email', 'wc-tour-booking' ); ?></option>
+                <option value="Phone"><?php esc_html_e( 'Phone', 'wc-tour-booking' ); ?></option>
+                <option value="WhatsApp"><?php esc_html_e( 'WhatsApp', 'wc-tour-booking' ); ?></option>
+            </select>
+        </div>
+        <div class="wctb-form-group">
+            <label class="wctb-wl-announcements" for="wctb-wl-announcements">
+                Would you like to receive trip announcements and emails from Va Beau?</label>
+            <input type="checkbox" id="wctb-wl-announcements" value="Yes">
+
+        </div>
+
+
+
+        <div class="wctb-form-group">
+            Additional Information
             <label
-                for="wctb-wl-travelers"><?php esc_html_e( 'Number of Travelers *', 'wc-tour-booking' ); ?></label><input
+                for="wctb-wl-travelers"><?php esc_html_e( 'How many people are traveling?  *', 'wc-tour-booking' ); ?></label><input
                 type="number" id="wctb-wl-travelers" class="wctb-input" min="1" value="1" required></div>
         <div class="wctb-form-group"><label
-                for="wctb-wl-message-text"><?php esc_html_e( 'Message', 'wc-tour-booking' ); ?></label><textarea
+                for="wctb-wl-message-text"><?php esc_html_e( 'Is there anything you would like us to know?', 'wc-tour-booking' ); ?></label><textarea
                 id="wctb-wl-message-text" class="wctb-textarea" rows="3"
-                placeholder="<?php esc_attr_e( 'Any special requests or questions?', 'wc-tour-booking' ); ?>"></textarea>
+                placeholder="<?php esc_attr_e( 'Your message goes here...', 'wc-tour-booking' ); ?>"></textarea>
         </div>
         <button type="button" id="wctb-wl-submit"
-            class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'Submit Waitlist Request', 'wc-tour-booking' ); ?></button>
+            class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'join the waitlist', 'wc-tour-booking' ); ?></button>
         <div id="wctb-wl-message" class="wctb-message" style="display:none;"></div>
     </div>
 </div>
@@ -307,9 +340,22 @@ function wctb_render_inquiry_popup( $product_id ) { ?>
     <div class="wctb-modal__content">
         <button class="wctb-modal__close"
             aria-label="<?php esc_attr_e( 'Close', 'wc-tour-booking' ); ?>">&times;</button>
-        <h2><?php esc_html_e( 'Check Availability', 'wc-tour-booking' ); ?></h2>
-        <p><?php esc_html_e( "Leave your details and we'll check availability and get back to you.", 'wc-tour-booking' ); ?>
+        <h2><?php esc_html_e( 'check trip availability', 'wc-tour-booking' ); ?></h2>
+        <p><?php esc_html_e( "Share your details and we'll confirm if space is available.", 'wc-tour-booking' ); ?>
         </p>
+
+        <?php 
+        $product = wc_get_product( $product_id );
+
+        echo "<h2>".$product->get_name()."</h2>";
+        echo wc_price($product->get_price());        
+        ?>
+        Departure Date
+        <span class="wctb-waitlist-departure-date"></span>
+        Return Date
+        <span class="wctb-waitlist-return-date"></span>
+
+
         <input type="hidden" id="wctb-inquiry-product-id" value="<?php echo esc_attr( $product_id ); ?>">
         <input type="hidden" id="wctb-inquiry-date" value="">
         <div class="wctb-form-row">
@@ -326,17 +372,36 @@ function wctb_render_inquiry_popup( $product_id ) { ?>
         <div class="wctb-form-group"><label
                 for="wctb-inq-phone"><?php esc_html_e( 'Phone Number', 'wc-tour-booking' ); ?></label><input type="tel"
                 id="wctb-inq-phone" class="wctb-input"></div>
+
         <div class="wctb-form-group">
             <label
-                for="wctb-inq-travelers"><?php esc_html_e( 'Number of Travelers *', 'wc-tour-booking' ); ?></label><input
+                for="wctb-inq-contact-method"><?php esc_html_e( 'Method of Contact *', 'wc-tour-booking' ); ?></label>
+            <select id="wctb-inq-contact-method" class="wctb-input" required>
+                <option value=""><?php esc_html_e( '— Select —', 'wc-tour-booking' ); ?></option>
+                <option value="Email"><?php esc_html_e( 'Email', 'wc-tour-booking' ); ?></option>
+                <option value="Phone"><?php esc_html_e( 'Phone', 'wc-tour-booking' ); ?></option>
+                <option value="WhatsApp"><?php esc_html_e( 'WhatsApp', 'wc-tour-booking' ); ?></option>
+            </select>
+        </div>
+        <div class="wctb-form-group">
+            <label class="wctb-inq-announcements" for="wctb-inq-announcements">
+                Would you like to receive trip announcements and emails from Va Beau?</label>
+            <input type="checkbox" id="wctb-inq-announcements" value="Yes">
+
+        </div>
+
+        <div class="wctb-form-group">
+            Additional Information
+            <label
+                for="wctb-inq-travelers"><?php esc_html_e( 'How many people are traveling?  *', 'wc-tour-booking' ); ?></label><input
                 type="number" id="wctb-inq-travelers" class="wctb-input" min="1" value="1" required></div>
         <div class="wctb-form-group"><label
-                for="wctb-inq-message"><?php esc_html_e( 'Message', 'wc-tour-booking' ); ?></label><textarea
+                for="wctb-inq-message"><?php esc_html_e( 'Is there anything you would like us to know?', 'wc-tour-booking' ); ?></label><textarea
                 id="wctb-inq-message" class="wctb-textarea" rows="3"
-                placeholder="<?php esc_attr_e( 'Any special requests or questions?', 'wc-tour-booking' ); ?>"></textarea>
+                placeholder="<?php esc_attr_e( 'Your message goes here...', 'wc-tour-booking' ); ?>"></textarea>
         </div>
         <button type="button" id="wctb-inq-submit"
-            class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'Check Availability', 'wc-tour-booking' ); ?></button>
+            class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'submit', 'wc-tour-booking' ); ?></button>
         <div id="wctb-inq-message-feedback" class="wctb-message" style="display:none;"></div>
     </div>
 </div>
@@ -350,11 +415,14 @@ function wctb_render_custom_journey_popup( $product_id ) { ?>
         <button class="wctb-modal__close"
             aria-label="<?php esc_attr_e( 'Close', 'wc-tour-booking' ); ?>">&times;</button>
         <h2><?php esc_html_e( 'Begin Your Custom Journey', 'wc-tour-booking' ); ?></h2>
-        <p><?php esc_html_e( "Tell us about your ideal trip and we'll craft a personalised itinerary for you.", 'wc-tour-booking' ); ?>
+        <p><?php esc_html_e( "Travel isn’t just about the places you visit, it’s about the way those moments linger long after you’ve returned. as Va Beau, we design journeys that move beyond itineraries and into transformation. Whether you’re chasing romance, celebrating, with friends, or carving out time just for you, we listen to your dreams and translate them into experiences that feel effortless, soulful, and deeply personal.", 'wc-tour-booking' ); ?>
+        </p>
+        <p><?php esc_html_e( "Your adventure begins here. Share a little about yourself below, and let’s start shaping a journey that feels like it was written just for you.", 'wc-tour-booking' ); ?>
         </p>
         <input type="hidden" id="wctb-cj-product-id" value="<?php echo esc_attr( $product_id ); ?>">
         <input type="hidden" id="wctb-cj-travel-date" value="">
         <div class="wctb-form-row">
+
             <div class="wctb-form-group"><label
                     for="wctb-cj-first-name"><?php esc_html_e( 'First Name *', 'wc-tour-booking' ); ?></label><input
                     type="text" id="wctb-cj-first-name" class="wctb-input" required></div>
@@ -413,14 +481,16 @@ function wctb_render_custom_journey_popup( $product_id ) { ?>
                 placeholder="<?php esc_attr_e( 'Special requirements, dietary needs, accessibility needs…', 'wc-tour-booking' ); ?>"></textarea>
         </div>
         <button type="button" id="wctb-cj-submit"
-            class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'Send My Request', 'wc-tour-booking' ); ?></button>
+            class="button wctb-btn wctb-btn--primary wctb-btn--full"><?php esc_html_e( 'Send', 'wc-tour-booking' ); ?></button>
         <div id="wctb-cj-message-feedback" class="wctb-message" style="display:none;"></div>
     </div>
 </div>
 <?php }
 
 // ─── Order-pay: inject traveler section before the Pay button ────────────────
-add_action( 'woocommerce_pay_order_before_submit', 'wctb_order_pay_traveler_section' );
+//add_action( 'woocommerce_pay_order_before_submit', 'wctb_order_pay_traveler_section' );
+add_action( 'woocommerce_pay_order_before_shop_table', 'wctb_order_pay_traveler_section' );
+
 function wctb_order_pay_traveler_section() {
     $order_id = absint( get_query_var( 'order-pay' ) );
     if ( ! $order_id ) return;
