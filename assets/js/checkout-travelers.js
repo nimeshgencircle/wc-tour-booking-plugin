@@ -288,6 +288,7 @@
         $('#wctb-total-' + pid).text(fmt(total));
 
         // Show/hide supplement line
+        /*
         var $suppLine = $('#wctb-supp-line-' + pid);
         if (singles > 0 && tour.supplement > 0) {
             var suppTotal = tour.supplement * singles;
@@ -297,7 +298,7 @@
             ).show();
         } else {
             $suppLine.hide();
-        }
+        }*/
     }
 
     /* ── DOM builders ─────────────────────────────────────────────── */

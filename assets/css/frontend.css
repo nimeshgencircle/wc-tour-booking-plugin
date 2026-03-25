@@ -176,6 +176,10 @@
 }
 
 /* ── Modal ───────────────────────────────────────────── */
+body.wctb-modal-open {
+    overflow: hidden;
+}
+
 .wctb-modal {
     position: fixed;
     inset: 0;
@@ -188,19 +192,24 @@
 .wctb-modal__overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.68);
+    backdrop-filter: blur(2px);
 }
 
 .wctb-modal__content {
     position: relative;
     background: #fff;
-    border-radius: 12px;
     padding: 32px 36px;
     width: 90%;
-    max-width: 620px;
-    max-height: 90vh;
+    max-width: 1004px;
+    height: 100vh;
     overflow-y: auto;
     box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+}
+
+.wctb-modal__content p,
+.wctb-modal__content p + p {
+    margin-top: 20px;
 }
 
 .wctb-modal__close {
@@ -217,9 +226,56 @@
 
 .wctb-modal__close:hover { color: #111; }
 
-.wctb-modal__content h2 {
+/* .wctb-modal__content h2 {
     margin: 0 0 20px;
     font-size: 22px;
+} */
+
+.wctb-modal__content .custom-form-wrapper,
+.wctb-modal__content .additional-form-wrapper {
+    position: relative;
+    border: 1px solid #e5e5e5;
+    padding: 30px 20px 20px;
+    margin-top: 80px;
+    background: #fff;
+}
+
+/* ===== Floating Title like legend ===== */
+.wctb-modal__content .custom-form-wrapper::before {
+    content: "TRAVELER DETAILS"; /* change text if needed */
+    position: absolute;
+    top: -15px;
+    left: 16px;
+    background: #fff;
+    padding: 0 10px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #000;
+    font-weight: 500;
+}
+
+.wctb-modal__content .additional-form-wrapper::before {
+    content: 'ADDITIONAL INFORMATION'; /* change text if needed */
+    position: absolute;
+    top: -15px;
+    left: 16px;
+    background: #fff;
+    padding: 0 10px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #000;
+    font-weight: 500;
+}
+
+/* ===== Optional: match clean luxury style ===== */
+.wctb-modal__content .custom-form-wrapper {
+    border-color: #ddd;
+}
+
+/* ===== Remove extra top margin from first field ===== */
+.wctb-modal__content .custom-form-wrapper .wctb-form-row:first-child,
+.wctb-modal__content .custom-form-wrapper .wctb-form-group:first-child {
+    margin-top: 0;
 }
 
 /* ── Form Elements ───────────────────────────────────── */
@@ -237,24 +293,24 @@
     margin-bottom: 14px;
 }
 
-.wctb-form-group label {
+/* .wctb-form-group label {
     display: block;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 500;
     margin-bottom: 5px;
     color: #444;
-}
+} */
 
-.wctb-input,
+/* .wctb-input,
 .wctb-textarea {
     width: 100%;
     padding: 9px 12px;
-    border: 1px solid #ccc;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
     border-radius: 6px;
     font-size: 14px;
     box-sizing: border-box;
     transition: border-color 0.2s;
-}
+} */
 
 .wctb-input:focus,
 .wctb-textarea:focus {
