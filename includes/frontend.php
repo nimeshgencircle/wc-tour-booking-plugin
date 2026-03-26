@@ -56,7 +56,7 @@ function wctb_enqueue_assets() {
 
     // ── Checkout page JS (regular checkout + order-pay) ──
     if ( is_checkout() ) {
-        wp_enqueue_script( 'wctb-checkout', WCTB_URL . 'assets/js/checkout-travelers.js', [ 'jquery' ], WCTB_VERSION, true );
+        wp_enqueue_script( 'wctb-checkout', WCTB_URL . 'assets/js/checkout-travelers.js', [ 'jquery', 'jquery-ui-datepicker' ], WCTB_VERSION, true );
 
         $tour_items   = [];
         $is_order_pay = wctb_is_order_pay_page();
@@ -116,7 +116,10 @@ function wctb_enqueue_assets() {
                 'last_name'       => __( 'Last Name',                                                  'wc-tour-booking' ),
                 'email'           => __( 'Email Address',                                              'wc-tour-booking' ),
                 'phone'           => __( 'Phone Number',                                               'wc-tour-booking' ),
-                'age'             => __( 'Age',                                                        'wc-tour-booking' ),
+                'gender'          => __( 'Gender',                                                     'wc-tour-booking' ),
+                'dob'             => __( 'Date of Birth',                                              'wc-tour-booking' ),
+                'gender_required' => __( 'Please select a gender for all travelers.',                  'wc-tour-booking' ),
+                'dob_invalid'     => __( 'Please enter a valid date of birth (YYYY/DD/MM) for all travelers.', 'wc-tour-booking' ),
                 'room_pref'       => __( 'Room Preference',                                            'wc-tour-booking' ),
                 'queen_bed'       => __( 'Double Room - Queen Bed',                                    'wc-tour-booking' ),
                 'twin_beds'       => __( 'Double Room - Twin Beds',                                    'wc-tour-booking' ),
@@ -677,9 +680,10 @@ function wctb_save_checkout_traveler_data( $order_id ) {
                     'first_name'      => sanitize_text_field( $t['first_name'] ?? '' ),
                     'last_name'       => sanitize_text_field( $t['last_name']  ?? '' ),
                     'name'            => sanitize_text_field( ( $t['first_name'] ?? '' ) . ' ' . ( $t['last_name'] ?? '' ) ),
+                    'gender'          => in_array( $t['gender'] ?? '', [ 'M', 'F' ] ) ? $t['gender'] : '',
+                    'dob'             => sanitize_text_field( $t['dob']        ?? '' ),
                     'email'           => sanitize_email(      $t['email']      ?? '' ),
                     'phone'           => sanitize_text_field( $t['phone']      ?? '' ),
-                    'age'             => absint(              $t['age']        ?? 0  ),
                     'room_type'       => in_array( $t['room_type'] ?? 'shared', [ 'shared', 'single' ] ) ? $t['room_type'] : 'shared',
                     'room_preference' => in_array( $t['room_preference'] ?? 'queen', [ 'queen', 'twin' ] ) ? $t['room_preference'] : 'queen',
                 ];

@@ -492,6 +492,30 @@
                            'value="' + escAttr(saved.last_name || '') + '" ' +
                            'placeholder="' + escAttr(i18n.traveler+' '+ travel_numbe + ' ' +i18n.last_name) + '" autocomplete="family-name" />' +
                 '</div>' +
+                '<div class="wctb-co-field wctb-co-field--gender">' +
+                    '<label class="wctb-co-label">' + escHtml(i18n.gender) + ' <span class="req">*</span></label>' +
+                    '<div class="wctb-gender-group">' +
+                        '<label class="wctb-gender-option">' +
+                            '<input type="radio" class="wctb-t-gender" name="wctb-gender-' + pid + '-' + idx + '" ' +
+                                   'data-pid="' + pid + '" data-idx="' + idx + '" value="M"' + (saved.gender === 'M' ? ' checked' : '') + '>' +
+                            '<span class="wctb-gender-box">M</span>' +
+                        '</label>' +
+                        '<label class="wctb-gender-option">' +
+                            '<input type="radio" class="wctb-t-gender" name="wctb-gender-' + pid + '-' + idx + '" ' +
+                                   'data-pid="' + pid + '" data-idx="' + idx + '" value="F"' + (saved.gender === 'F' ? ' checked' : '') + '>' +
+                            '<span class="wctb-gender-box">F</span>' +
+                        '</label>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="wctb-co-field">' +
+                    '<label class="wctb-co-label" for="wctb-dob-' + pid + '-' + idx + '">' + escHtml(i18n.dob) + ' <span class="req">*</span></label>' +
+                    '<div class="wctb-dob-wrap">' +
+                        '<input type="text" id="wctb-dob-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-dob" ' +
+                               'data-pid="' + pid + '" data-idx="' + idx + '" ' +
+                               'value="' + escAttr(saved.dob || '') + '" ' +
+                               'placeholder="YYYY/DD/MM" readonly />' +
+                    '</div>' +
+                '</div>' +
                 '<div class="wctb-co-field">' +
                     '<label class="wctb-co-label" for="wctb-em-' + pid + '-' + idx + '">' + i18n.email + ' <span class="req">*</span></label>' +
                     '<input type="email" id="wctb-em-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-email" ' +
@@ -500,18 +524,11 @@
                            'placeholder="' + escAttr(i18n.email) + '" autocomplete="email" />' +
                 '</div>' +
                 '<div class="wctb-co-field">' +
-                    '<label class="wctb-co-label" for="wctb-ph-' + pid + '-' + idx + '">' + i18n.phone + '</label>' +
+                    '<label class="wctb-co-label" for="wctb-ph-' + pid + '-' + idx + '">' + i18n.phone + ' <span class="req">*</span></label>' +
                     '<input type="tel" id="wctb-ph-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-phone" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
                            'value="' + escAttr(saved.phone || '') + '" ' +
                            'placeholder="' + escAttr(i18n.phone) + '" autocomplete="tel" />' +
-                '</div>' +
-                '<div class="wctb-co-field">' +
-                    '<label class="wctb-co-label" for="wctb-ag-' + pid + '-' + idx + '">' + i18n.age + '</label>' +
-                    '<input type="number" id="wctb-ag-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-age" ' +
-                           'data-pid="' + pid + '" data-idx="' + idx + '" ' +
-                           'value="' + escAttr(saved.age || '') + '" ' +
-                           'placeholder="' + escAttr(i18n.age) + '" min="1" max="120" />' +
                 '</div>' +
                 roomHtml +
                 roomPrefHtml +
@@ -560,6 +577,33 @@
         $('#wctb-legend-' + pid).html(buildRoomLegend(pid, state[pid].count));
     }
 
+    /* ── Date picker ──────────────────────────────────────────────── */
+
+    function initDatepickers() {
+        $('.wctb-t-dob').each(function () {
+            if ($(this).hasClass('wctb-dob-ready')) return; // already initialised
+            $(this).addClass('wctb-dob-ready');
+
+            var $input = $(this);
+            var pid    = $input.data('pid');
+            var idx    = parseInt($input.data('idx'));
+
+            $input.datepicker({
+                dateFormat:   'yy/dd/mm',
+                changeMonth:  true,
+                changeYear:   true,
+                yearRange:    '-100:+0',
+                maxDate:      new Date(),
+                showButtonPanel: false,
+                onSelect: function (dateText) {
+                    if (!state[pid].travelers[idx]) state[pid].travelers[idx] = {};
+                    state[pid].travelers[idx].dob = dateText;
+                    serializeToHidden();
+                }
+            });
+        });
+    }
+
     /* ── Render all sections ──────────────────────────────────────── */
 
     function renderAll() {
@@ -582,6 +626,7 @@
 
         $wrap.html(html);
         serializeToHidden();
+        initDatepickers();
 
         // Refresh pricing display now that solo-single state is set
         c.tour_items.forEach(function (tour) {
@@ -602,9 +647,10 @@
 
                 state[pid].travelers[i].first_name = $b.find('.wctb-t-first-name').val() || '';
                 state[pid].travelers[i].last_name  = $b.find('.wctb-t-last-name').val()  || '';
+                state[pid].travelers[i].gender     = $b.find('.wctb-t-gender:checked').val() || '';
+                state[pid].travelers[i].dob        = $b.find('.wctb-t-dob').val()        || '';
                 state[pid].travelers[i].email      = $b.find('.wctb-t-email').val()       || '';
                 state[pid].travelers[i].phone      = $b.find('.wctb-t-phone').val()       || '';
-                state[pid].travelers[i].age        = $b.find('.wctb-t-age').val()         || '';
                 // room_type is managed by applyRoomCascade, only read if not already set
                 if (!state[pid].travelers[i].room_type) {
                     state[pid].travelers[i].room_type = $b.find('.wctb-co-room').val() || 'shared';
@@ -657,6 +703,7 @@
             html += buildTravelerBlock(tour, i, state[pid].travelers[i] || {});
         }
         $forms.html(html);
+        initDatepickers();
 
         // Re-apply cascade for all paired travelers after count change
         // (skip the solo last traveler — enforceSoloSingle already handled it)
@@ -756,6 +803,15 @@
         serializeToHidden();
     });
 
+    /** Gender radio changed → serialize */
+    $(document).on('change', '.wctb-t-gender', function () {
+        var pid = $(this).data('pid');
+        var idx = parseInt($(this).data('idx'));
+        if (!state[pid].travelers[idx]) state[pid].travelers[idx] = {};
+        state[pid].travelers[idx].gender = $(this).val();
+        serializeToHidden();
+    });
+
     /** All text/number inputs → serialize on change */
     $(document).on('input change', '.wctb-co-input', function () {
         // Refresh legend names when first_name changes
@@ -778,10 +834,27 @@
             var count    = state[pid].count;
             var travelers = state[pid].travelers;
 
+            var dobRegex = /^\d{4}\/\d{2}\/\d{2}$/;
             for (var j = 0; j < count; j++) {
                 var t = travelers[j] || {};
                 if (!t.first_name || !t.last_name || !t.email) {
                     alert(c.i18n.fill_required);
+                    var $wrap = $('#wctb-checkout-travelers-wrap');
+                    if ($wrap.length) {
+                        $wrap[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    return false;
+                }
+                if (!t.gender) {
+                    alert(c.i18n.gender_required);
+                    var $wrap = $('#wctb-checkout-travelers-wrap');
+                    if ($wrap.length) {
+                        $wrap[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                    return false;
+                }
+                if (!t.dob || !dobRegex.test(t.dob)) {
+                    alert(c.i18n.dob_invalid);
                     var $wrap = $('#wctb-checkout-travelers-wrap');
                     if ($wrap.length) {
                         $wrap[0].scrollIntoView({ behavior: 'smooth', block: 'start' });

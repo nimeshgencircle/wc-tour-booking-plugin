@@ -25,9 +25,10 @@ function wctb_sanitize_travelers( array $raw ): array {
     foreach ( $raw as $t ) {
         $clean[] = [
             'name'       => sanitize_text_field( $t['name']      ?? '' ),
+            'gender'     => in_array( $t['gender'] ?? '', [ 'M', 'F' ] ) ? $t['gender'] : '',
+            'dob'        => sanitize_text_field( $t['dob']       ?? '' ),
             'email'      => sanitize_email(      $t['email']     ?? '' ),
             'phone'      => sanitize_text_field( $t['phone']     ?? '' ),
-            'age'        => absint(              $t['age']       ?? 0  ),
             'room_type'  => in_array( $t['room_type'] ?? 'shared', [ 'shared', 'single' ] )
                                 ? $t['room_type'] : 'shared',
         ];
@@ -117,9 +118,10 @@ function wctb_display_traveler_admin_meta( $item_id, $item, $product ) {
     echo '<thead><tr>
         <th>#</th>
         <th>' . esc_html__( 'Name', 'wc-tour-booking' ) . '</th>
+        <th>' . esc_html__( 'Gender', 'wc-tour-booking' ) . '</th>
+        <th>' . esc_html__( 'DOB', 'wc-tour-booking' ) . '</th>
         <th>' . esc_html__( 'Email', 'wc-tour-booking' ) . '</th>
         <th>' . esc_html__( 'Phone', 'wc-tour-booking' ) . '</th>
-        <th>' . esc_html__( 'Age', 'wc-tour-booking' ) . '</th>
         <th>' . esc_html__( 'Room', 'wc-tour-booking' ) . '</th>
     </tr></thead><tbody>';
 
@@ -127,9 +129,10 @@ function wctb_display_traveler_admin_meta( $item_id, $item, $product ) {
         echo '<tr>';
         echo '<td>' . esc_html( $i + 1 ) . '</td>';
         echo '<td>' . esc_html( $t['name'] ) . '</td>';
+        echo '<td>' . esc_html( $t['gender'] ?? '' ) . '</td>';
+        echo '<td>' . esc_html( $t['dob'] ?? '' ) . '</td>';
         echo '<td>' . esc_html( $t['email'] ) . '</td>';
         echo '<td>' . esc_html( $t['phone'] ) . '</td>';
-        echo '<td>' . esc_html( $t['age'] ) . '</td>';
         echo '<td>' . esc_html( wctb_room_pair_label( $t ) ) . '</td>';
         echo '</tr>';
     }
@@ -207,9 +210,10 @@ function wctb_save_order_pay_traveler_data( $order ) {
                     'first_name'      => sanitize_text_field( $t['first_name'] ?? '' ),
                     'last_name'       => sanitize_text_field( $t['last_name']  ?? '' ),
                     'name'            => sanitize_text_field( ( $t['first_name'] ?? '' ) . ' ' . ( $t['last_name'] ?? '' ) ),
+                    'gender'          => in_array( $t['gender'] ?? '', [ 'M', 'F' ] ) ? $t['gender'] : '',
+                    'dob'             => sanitize_text_field( $t['dob']        ?? '' ),
                     'email'           => sanitize_email(      $t['email']      ?? '' ),
                     'phone'           => sanitize_text_field( $t['phone']      ?? '' ),
-                    'age'             => absint(              $t['age']        ?? 0  ),
                     'room_type'       => in_array( $t['room_type'] ?? 'shared', [ 'shared', 'single' ] )
                                             ? $t['room_type'] : 'shared',
                     'room_preference' => in_array( $t['room_preference'] ?? 'queen', [ 'queen', 'twin' ] )

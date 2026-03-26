@@ -33,8 +33,8 @@ function wctb_email_traveler_details( $order, $sent_to_admin, $plain_text, $emai
 
             foreach ( $ti['travelers'] as $i => $t ) {
                 echo sprintf(
-                    __( "Traveler %d: %s | %s | %s | Age: %s | %s\n", 'wc-tour-booking' ),
-                    $i + 1, $t['name'], $t['email'], $t['phone'], $t['age'], wctb_room_pair_label( $t )
+                    __( "Traveler %d: %s | %s | %s | Gender: %s | DOB: %s | %s\n", 'wc-tour-booking' ),
+                    $i + 1, $t['name'], $t['email'], $t['phone'], $t['gender'] ?? '', $t['dob'] ?? '', wctb_room_pair_label( $t )
                 );
             }
             echo "\n";
@@ -57,9 +57,10 @@ function wctb_email_traveler_details( $order, $sent_to_admin, $plain_text, $emai
                 <tr style="background:#f5f5f5;">
                     <th style="border:1px solid #ddd;text-align:left;">#</th>
                     <th style="border:1px solid #ddd;text-align:left;"><?php esc_html_e( 'Name', 'wc-tour-booking' ); ?></th>
+                    <th style="border:1px solid #ddd;text-align:left;"><?php esc_html_e( 'Gender', 'wc-tour-booking' ); ?></th>
+                    <th style="border:1px solid #ddd;text-align:left;"><?php esc_html_e( 'DOB', 'wc-tour-booking' ); ?></th>
                     <th style="border:1px solid #ddd;text-align:left;"><?php esc_html_e( 'Email', 'wc-tour-booking' ); ?></th>
                     <th style="border:1px solid #ddd;text-align:left;"><?php esc_html_e( 'Phone', 'wc-tour-booking' ); ?></th>
-                    <th style="border:1px solid #ddd;text-align:left;"><?php esc_html_e( 'Age', 'wc-tour-booking' ); ?></th>
                     <th style="border:1px solid #ddd;text-align:left;"><?php esc_html_e( 'Room', 'wc-tour-booking' ); ?></th>
                 </tr>
             </thead>
@@ -68,9 +69,10 @@ function wctb_email_traveler_details( $order, $sent_to_admin, $plain_text, $emai
                 <tr>
                     <td style="border:1px solid #ddd;"><?php echo esc_html( $i + 1 ); ?></td>
                     <td style="border:1px solid #ddd;"><?php echo esc_html( $t['name'] ); ?></td>
+                    <td style="border:1px solid #ddd;"><?php echo esc_html( $t['gender'] ?? '' ); ?></td>
+                    <td style="border:1px solid #ddd;"><?php echo esc_html( $t['dob'] ?? '' ); ?></td>
                     <td style="border:1px solid #ddd;"><?php echo esc_html( $t['email'] ); ?></td>
                     <td style="border:1px solid #ddd;"><?php echo esc_html( $t['phone'] ); ?></td>
-                    <td style="border:1px solid #ddd;"><?php echo esc_html( $t['age'] ); ?></td>
                     <td style="border:1px solid #ddd;"><?php echo esc_html( wctb_room_pair_label( $t ) ); ?></td>
                 </tr>
             <?php endforeach; ?>

@@ -37,9 +37,10 @@ function wctb_order_admin_traveler_panel( $order ) {
         echo '<thead><tr>
             <th>#</th>
             <th>' . esc_html__( 'Name', 'wc-tour-booking' ) . '</th>
+            <th>' . esc_html__( 'Gender', 'wc-tour-booking' ) . '</th>
+            <th>' . esc_html__( 'DOB', 'wc-tour-booking' ) . '</th>
             <th>' . esc_html__( 'Email', 'wc-tour-booking' ) . '</th>
             <th>' . esc_html__( 'Phone', 'wc-tour-booking' ) . '</th>
-            <th>' . esc_html__( 'Age', 'wc-tour-booking' ) . '</th>
             <th>' . esc_html__( 'Room', 'wc-tour-booking' ) . '</th>
         </tr></thead><tbody>';
 
@@ -47,9 +48,10 @@ function wctb_order_admin_traveler_panel( $order ) {
             echo '<tr>';
             printf( '<td>%d</td>', $i + 1 );
             printf( '<td>%s</td>', esc_html( $t['name'] ) );
+            printf( '<td>%s</td>', esc_html( $t['gender'] ?? '' ) );
+            printf( '<td>%s</td>', esc_html( $t['dob'] ?? '' ) );
             printf( '<td>%s</td>', esc_html( $t['email'] ) );
             printf( '<td>%s</td>', esc_html( $t['phone'] ) );
-            printf( '<td>%s</td>', esc_html( $t['age'] ) );
             printf( '<td>%s</td>', esc_html( wctb_room_pair_label( $t ) ) );
             echo '</tr>';
         }

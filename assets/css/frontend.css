@@ -642,9 +642,6 @@ body.wctb-modal-open {
 } */
 
 /* Room Preference field spans full width */
-.wctb-co-field--room-pref {
-    grid-column: 1 / -1;
-}
 
 /* Locked sharing preference display for second traveler */
 .wctb-sharing-pref-locked {
@@ -698,6 +695,235 @@ body.wctb-modal-open {
 .wctb-co-input::placeholder {
     color: #bbb;
     font-size: 13px;
+}
+
+/* ── Gender radio buttons ──────────────────────────────── */
+.wctb-gender-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 6px;
+    padding-bottom: 4px;
+}
+
+.wctb-gender-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* .wctb-gender-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+} */
+
+.wctb-gender-option input[type="radio"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #000;
+  border-radius: 0;
+  background: #fff;
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  margin: 0;
+  position: relative;
+}
+
+.wctb-gender-option input[type="radio"]::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: #000;
+  transform: scale(0);
+  transition: transform 0.2s ease-in-out;
+}
+
+.wctb-gender-option input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+/* .wctb-gender-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    user-select: none;
+} */
+
+.wctb-gender-option:hover .wctb-gender-box {
+    border-color: #888;
+}
+
+/* ── DOB input wrapper (calendar icon) ─────────────────── */
+.wctb-dob-wrap {
+    position: relative;
+}
+
+.wctb-dob-wrap::after {
+    content: '';
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 6px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23555'/%3E%3C/svg%3E") no-repeat center;
+    pointer-events: none;
+}
+
+.wctb-dob-wrap .wctb-co-input {
+    width: 100%;
+    cursor: pointer;
+}
+
+/* ── jQuery UI Datepicker ───────────────────────────────── */
+.ui-datepicker {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    padding: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    width: 260px;
+    z-index: 9999 !important;
+}
+
+.ui-datepicker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.ui-datepicker-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #111;
+    display: flex;
+    gap: 6px;
+}
+
+.ui-datepicker-title select {
+    font-size: 13px;
+    border: none;
+    background: transparent;
+    font-weight: 700;
+    color: #111;
+    cursor: pointer;
+    outline: none;
+    padding: 0;
+}
+
+.ui-datepicker-prev,
+.ui-datepicker-next {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: transparent;
+    position: static;
+    top: auto;
+}
+
+.ui-datepicker-prev:hover,
+.ui-datepicker-next:hover {
+    background: #f2f2f2;
+}
+
+.ui-datepicker-prev span,
+.ui-datepicker-next span {
+    display: none;
+}
+
+.ui-datepicker-prev::after {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-left: 1.5px solid #555;
+    border-bottom: 1.5px solid #555;
+    transform: rotate(45deg);
+    margin-left: 4px;
+}
+
+.ui-datepicker-next::after {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid #555;
+    border-top: 1.5px solid #555;
+    transform: rotate(45deg);
+    margin-right: 4px;
+}
+
+.ui-datepicker-calendar {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ui-datepicker-calendar thead th {
+    font-size: 11px;
+    font-weight: 700;
+    color: #999;
+    text-align: center;
+    padding: 4px 0;
+}
+
+.ui-datepicker-calendar tbody td {
+    text-align: center;
+    padding: 1px;
+}
+
+.ui-datepicker-calendar tbody td a,
+.ui-datepicker-calendar tbody td span {
+    display: block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 12px;
+    color: #333;
+    text-decoration: none;
+    margin: 0 auto;
+}
+
+.ui-datepicker-calendar tbody td a:hover {
+    background: #f2f2f2;
+    color: #111;
+}
+
+.ui-datepicker-calendar .ui-state-active {
+    background: #111 !important;
+    color: #fff !important;
+}
+
+.ui-datepicker-calendar .ui-state-highlight {
+    background: #f5f5f5;
+    color: #111;
+}
+
+.ui-datepicker-calendar .ui-datepicker-unselectable span {
+    color: #ccc;
 }
 
 /* ── Room select wrapper + custom select ───────────────── */
@@ -814,6 +1040,5 @@ select.wctb-co-input {
     .wctb-co-topbar        { flex-direction: column; align-items: flex-start; }
     .wctb-co-pricing-bar   { width: 100%; justify-content: space-between; }
     .wctb-co-field--room,
-    .wctb-co-field--room-pref { grid-column: 1; }
     .wctb-legend-pairs     { flex-direction: column; }
 }
