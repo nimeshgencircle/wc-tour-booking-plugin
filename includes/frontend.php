@@ -199,6 +199,11 @@ function wctb_render_tour_button() {
 
     remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30 );
 
+    if(count($dates) > 1 ){
+        echo '<p class="multi-date">' . esc_html__('Multiple Dates', 'wc-tour-booking') . '</p>';
+    }else{
+        echo '<p>' . esc_html__('Dates', 'wc-tour-booking') . '</p>';
+    }
     echo '<div class="wctb-dates-list">';
 
     foreach ( $dates as $date ) {
@@ -216,10 +221,13 @@ function wctb_render_tour_button() {
         echo '<div class="wctb-date-list-row">';
         echo '<span class="wctb-date-list-label">' . esc_html( $label ) . '</span>';
 
+        $arrow_img = '<img src="'.WCTB_URL . 'assets/images/book-arrow.svg" alt="arrow" />
+';
+
         switch ( $btn_type ) {
             case 'book_now':
                 printf(
-                    '<button type="button" class="wctb-btn wctb-btn--dark wctb-btn-book-now" data-date="%s" data-product="%d">%s &rarr;</button>',
+                    '<button type="button" class="wctb-btn wctb-btn--dark wctb-btn-book-now" data-date="%s" data-product="%d">%s '.$arrow_img.'</button>',
                     $date_value,
                     (int) $product_id,
                     esc_html__( 'Book Now', 'wc-tour-booking' )
@@ -228,7 +236,7 @@ function wctb_render_tour_button() {
 
             case 'waitlist':
                 printf(
-                    '<button type="button" class="wctb-btn wctb-btn--dark wctb-btn-waitlist" data-date="%s">%s &rarr;</button>',
+                    '<button type="button" class="wctb-btn wctb-btn--dark wctb-btn-waitlist" data-date="%s">%s '.$arrow_img.'</button>',
                     $date_value,
                     esc_html__( 'Join Waitlist', 'wc-tour-booking' )
                 );
@@ -236,7 +244,7 @@ function wctb_render_tour_button() {
 
             case 'inquiry':
                 printf(
-                    '<button type="button" class="wctb-btn wctb-btn--dark wctb-btn-inquiry" data-date="%s">%s &rarr;</button>',
+                    '<button type="button" class="wctb-btn wctb-btn--dark wctb-btn-inquiry" data-date="%s">%s '.$arrow_img.'</button>',
                     $date_value,
                     esc_html__( 'Check Availability', 'wc-tour-booking' )
                 );
@@ -244,7 +252,7 @@ function wctb_render_tour_button() {
 
             case 'custom_journey':
                 printf(
-                    '<button type="button" class="wctb-btn wctb-btn--dark wctb-btn-custom-journey" data-date="%s">%s &rarr;</button>',
+                    '<button type="button" class="wctb-btn wctb-btn--dark wctb-btn-custom-journey" data-date="%s">%s '.$arrow_img.'</button>',
                     $date_value,
                     esc_html__( 'Begin Custom Journey', 'wc-tour-booking' )
                 );
@@ -254,7 +262,12 @@ function wctb_render_tour_button() {
         echo '</div>';
     }
 
-    if(isset($dates[0]['start']) && isset($dates[0]['end'])){
+    echo '</div>';
+
+    echo '<div class="trip-details-info">';
+
+    // Length Column
+    if (isset($dates[0]['start']) && isset($dates[0]['end'])) {
 
         $start = new DateTime($dates[0]['start']);
         $end   = new DateTime($dates[0]['end']);
@@ -268,35 +281,41 @@ function wctb_render_tour_button() {
         // Days (including start date)
         $days = $nights + 1;
 
-        
-        echo esc_html__('Length','wc-tour-booking');
-        echo esc_html__('Days:','wc-tour-booking').' ' . $days . "<br>";
-        echo esc_html__('Nights:','wc-tour-booking').' ' . $nights . "<br>";                 
-                 
- 
-            
+        echo '<div class="trip-detail-col">';
+        echo '<p class="trip-title">' . esc_html__('Length', 'wc-tour-booking') . '</p>';
+        echo '<p>' . esc_html__('Days:', 'wc-tour-booking') . ' ' . $days . '</p>';
+        echo '<p>' . esc_html__('Nights:', 'wc-tour-booking') . ' ' . $nights . '</p>';
+        echo '</div>';
     }
 
-        $location = wc_get_product_terms($product->get_id(), 'location', [
-            'fields' => 'names'
-        ]);
+    // Destination Column
+    $location = wc_get_product_terms($product->get_id(), 'location', [
+        'fields' => 'names'
+    ]);
 
-        if(!empty($location)){
-            echo esc_html__('Destination ','wc-tour-booking'). $location[0];
-        }
-
-    if(!empty($wctb_max_travelers)){
-        echo '<p>  '.esc_html__('Group size','wc-tour-booking').''.$wctb_max_travelers.' '.esc_html__('people','wc-tour-booking').'</p>';
-
+    if (!empty($location)) {
+        echo '<div class="trip-detail-col">';
+        echo '<p class="trip-title">' . esc_html__('Destination', 'wc-tour-booking') . '</p>';
+        echo '<p>' . esc_html($location[0]) . '</p>';
+        echo '</div>';
     }
 
-    echo esc_html__('Price','wc-tour-booking').wc_price($product->get_price());
+    // Group Size Column
+    if (!empty($wctb_max_travelers)) {
+        echo '<div class="trip-detail-col">';
+        echo '<p class="trip-title">' . esc_html__('Group Size', 'wc-tour-booking') . '</p>';
+        echo '<p>' . esc_html($wctb_max_travelers) . ' ' . esc_html__('People', 'wc-tour-booking') . '</p>';
+        echo '</div>';
+    }
 
-    
-                
-
+    // Price Column
+    echo '<div class="trip-detail-col">';
+    echo '<p class="trip-title">' . esc_html__('Price', 'wc-tour-booking') . '</p>';
+    echo '<p>' . wc_price($product->get_price()) . '</p>';
+    echo '</div>';
 
     echo '</div>';
+    
 
     wctb_render_waitlist_popup( $product_id );
     wctb_render_inquiry_popup( $product_id );

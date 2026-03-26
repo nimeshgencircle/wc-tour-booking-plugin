@@ -468,6 +468,8 @@
             }
         }
 
+        var travel_numbe = idx + 1;
+
         return '<div class="wctb-co-traveler" id="wctb-t-' + pid + '-' + idx + '" data-idx="' + idx + '" data-pid="' + pid + '">' +
             '<div class="wctb-co-traveler-heading">' +
                 '<span class="wctb-co-traveler-num">' + i18n.traveler + ' ' + (idx + 1) + '</span>' +
@@ -477,18 +479,18 @@
             '</div>' +
             '<div class="wctb-co-grid">' +
                 '<div class="wctb-co-field">' +
-                    '<label class="wctb-co-label" for="wctb-fn-' + pid + '-' + idx + '">' + i18n.first_name + ' <span class="req">*</span></label>' +
+                    '<label class="wctb-co-label" for="wctb-fn-' + pid + '-' + idx + '">' + idx + i18n.first_name + ' <span class="req">*</span></label>' +
                     '<input type="text" id="wctb-fn-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-first-name" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
                            'value="' + escAttr(saved.first_name || '') + '" ' +
-                           'placeholder="' + escAttr(i18n.first_name) + '" autocomplete="given-name" />' +
+                           'placeholder="' + escAttr( i18n.traveler+' '+ travel_numbe + ' ' + i18n.first_name) + '" autocomplete="given-name" />' +
                 '</div>' +
                 '<div class="wctb-co-field">' +
                     '<label class="wctb-co-label" for="wctb-ln-' + pid + '-' + idx + '">' + i18n.last_name + ' <span class="req">*</span></label>' +
                     '<input type="text" id="wctb-ln-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-last-name" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
                            'value="' + escAttr(saved.last_name || '') + '" ' +
-                           'placeholder="' + escAttr(i18n.last_name) + '" autocomplete="family-name" />' +
+                           'placeholder="' + escAttr(i18n.traveler+' '+ travel_numbe + ' ' +i18n.last_name) + '" autocomplete="family-name" />' +
                 '</div>' +
                 '<div class="wctb-co-field">' +
                     '<label class="wctb-co-label" for="wctb-em-' + pid + '-' + idx + '">' + i18n.email + ' <span class="req">*</span></label>' +

@@ -19,12 +19,10 @@
 /* ── Tour Dates List ─────────────────────────────────── */
 .wctb-dates-list {
     margin: 12px 0 20px;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
     overflow: hidden;
 }
 
-.wctb-date-list-row {
+/* .wctb-date-list-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -33,22 +31,18 @@
     border-bottom: 1px solid #f0f0f0;
     background: #fff;
     transition: background 0.15s;
-}
+} */
 
 .wctb-date-list-row:last-child {
     border-bottom: none;
 }
 
-.wctb-date-list-row:hover {
-    background: #fafafa;
-}
-
-.wctb-date-list-label {
+/* .wctb-date-list-label {
     font-size: 15px;
     font-weight: 500;
     color: #222;
     flex: 1;
-}
+} */
 
 /* ── Dark button (used in date list rows) ────────────── */
 .wctb-btn--dark {
@@ -56,7 +50,6 @@
     color: #fff !important;
     border: none;
     padding: 10px 22px;
-    border-radius: 4px;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.8px;
@@ -132,7 +125,7 @@
     font-size: 14px;
 }
 
-.wctb-btn {
+/* .wctb-btn {
     display: inline-block;
     padding: 12px 28px;
     border: none;
@@ -141,7 +134,7 @@
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s, transform 0.1s;
-}
+} */
 
 .wctb-btn:active { transform: scale(0.98); }
 
@@ -644,9 +637,9 @@ body.wctb-modal-open {
 }
 
 /* Room field spans full width */
-.wctb-co-field--room {
+/* .wctb-co-field--room {
     grid-column: 1 / -1;
-}
+} */
 
 /* Room Preference field spans full width */
 .wctb-co-field--room-pref {
@@ -710,7 +703,7 @@ body.wctb-modal-open {
 /* ── Room select wrapper + custom select ───────────────── */
 .wctb-room-select-wrap {
     position: relative;
-    max-width: 340px;
+    /* max-width: 340px; */
 }
 
 .wctb-room-select-wrap::after {
@@ -734,8 +727,6 @@ select.wctb-co-input {
 
 /* Highlight the room field when single is selected */
 .wctb-co-traveler:has(.wctb-co-room option[value="single"]:checked) .wctb-co-field--room {
-    background: #fffbeb;
-    border-radius: 6px;
     padding: 8px 10px;
     margin: -8px -10px;
 }
