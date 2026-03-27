@@ -483,14 +483,14 @@
                     '<input type="text" id="wctb-fn-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-first-name" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
                            'value="' + escAttr(saved.first_name || '') + '" ' +
-                           'placeholder="' + escAttr( i18n.traveler+' '+ travel_numbe + ' ' + i18n.first_name) + '" autocomplete="given-name" />' +
+                           'placeholder="' + escAttr( i18n.traveler+' '+ travel_numbe + ' ' + i18n.first_name) + ' *" autocomplete="given-name" />' +
                 '</div>' +
                 '<div class="wctb-co-field">' +
                     '<label class="wctb-co-label" for="wctb-ln-' + pid + '-' + idx + '">' + i18n.last_name + ' <span class="req">*</span></label>' +
                     '<input type="text" id="wctb-ln-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-last-name" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
                            'value="' + escAttr(saved.last_name || '') + '" ' +
-                           'placeholder="' + escAttr(i18n.traveler+' '+ travel_numbe + ' ' +i18n.last_name) + '" autocomplete="family-name" />' +
+                           'placeholder="' + escAttr(i18n.traveler+' '+ travel_numbe + ' ' +i18n.last_name) + ' *" autocomplete="family-name" />' +
                 '</div>' +
                 '<div class="wctb-co-field wctb-co-field--gender">' +
                     '<label class="wctb-co-label">' + escHtml(i18n.gender) + ' <span class="req">*</span></label>' +
@@ -521,14 +521,14 @@
                     '<input type="email" id="wctb-em-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-email" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
                            'value="' + escAttr(saved.email || '') + '" ' +
-                           'placeholder="' + escAttr(i18n.email) + '" autocomplete="email" />' +
+                           'placeholder="' + escAttr(i18n.email) + ' *" autocomplete="email" />' +
                 '</div>' +
                 '<div class="wctb-co-field">' +
                     '<label class="wctb-co-label" for="wctb-ph-' + pid + '-' + idx + '">' + i18n.phone + ' <span class="req">*</span></label>' +
                     '<input type="tel" id="wctb-ph-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-phone" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
                            'value="' + escAttr(saved.phone || '') + '" ' +
-                           'placeholder="' + escAttr(i18n.phone) + '" autocomplete="tel" />' +
+                           'placeholder="' + escAttr(i18n.phone) + ' *" autocomplete="tel" />' +
                 '</div>' +
                 roomHtml +
                 roomPrefHtml +
