@@ -507,7 +507,7 @@
                         '</label>' +
                     '</div>' +
                 '</div>' +
-                '<div class="wctb-co-field">' +
+                '<div class="wctb-co-field wctb-co-field--dob">' +
                     '<label class="wctb-co-label" for="wctb-dob-' + pid + '-' + idx + '">' + escHtml(i18n.dob) + ' <span class="req">*</span></label>' +
                     '<div class="wctb-dob-wrap">' +
                         '<input type="text" id="wctb-dob-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-dob" ' +
