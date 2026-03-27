@@ -201,17 +201,24 @@ function wctb_render_tour_button() {
     $dates = json_decode( $dates_raw, true );
 
     remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30 );
-
+    $class =" multi-date";
     if(count($dates) > 1 ){
+        $class =" multi-date";
         echo '<p class="multi-date">' . esc_html__('Multiple Dates', 'wc-tour-booking') . '</p>';
     }else{
-        echo '<p>' . esc_html__('Dates', 'wc-tour-booking') . '</p>';
+        $class =" single-date";
+        echo '<p class="single-date" >' . esc_html__('Dates', 'wc-tour-booking') . '</p>';
     }
-    echo '<div class="wctb-dates-list">';
-
+    echo '<div class="wctb-dates-list '.$class.'">';
+     $current_date = current_time('Y-m-d'); // WordPress current date
     foreach ( $dates as $date ) {
         $btn_type   = $date['button_type'] ?? 'auto';
         $date_value = $date['start'] . ' to ' . $date['end'];
+   
+        // Remove past date booking
+        if (strtotime($date['start']) < strtotime($current_date)) {
+                continue;
+        }
 
         if ( $btn_type === 'auto' || $btn_type === 'book_now') {
             $seats    = wctb_get_available_seats( $product_id, $date_value );
