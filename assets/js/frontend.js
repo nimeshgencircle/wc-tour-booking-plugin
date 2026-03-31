@@ -8,11 +8,27 @@
     var d = wctb_data;
 
     /* ─── Helpers ─────────────────────────────────────────────────── */
-    function showModal(id) { $('#' + id).fadeIn(200); $('body').addClass('wctb-modal-open'); }
+    function showModal(id) { 
+        var $modal = $('#' + id);
+        
+        $('body').addClass('wctb-modal-open');
+
+        // Keep modal flex layout on open and force a paint so blur is visible immediately.
+        $modal.stop(true, true).css('display', 'flex').hide().fadeIn(200);
+        if ($modal[0]) {
+            void $modal[0].offsetHeight;
+        }
+    }
 
     function showMessage($el, msg, type) {
         $el.removeClass('wctb-message--success wctb-message--error')
            .addClass('wctb-message--' + type).html(msg).show();
+    }
+
+    function isValidPhone(phone) {
+        // Allow digits, spaces, +, -, (, ) — min 7 digits
+        var digits = phone.replace(/\D/g, '');
+        return /^[0-9+\-\s().]+$/.test(phone) && digits.length >= 7 && digits.length <= 15;
     }
 
     /* ─── Book Now (per-date row) ──────────────────────────────────── */
@@ -45,9 +61,9 @@
 
             var formatDate = function (dateStr) {
                 var d = new Date(dateStr);
-                var month = d.getMonth() + 1;         // No leading zero (m)
-                var day   = d.getDate();               // No leading zero (d)
-                var year  = d.getFullYear();           // 4-digit year (Y)
+                var month = String(d.getMonth() + 1).padStart(2, '0');  // Leading zero (MM)
+                var day   = String(d.getDate()).padStart(2, '0');         // Leading zero (DD)
+                var year  = d.getFullYear();                              // 4-digit year (YYYY)
                 return month + '/' + day + '/' + year;
             };
 
@@ -75,7 +91,9 @@
 
 
 
-        if (!firstName || !lastName || !email) { showMessage($feedback, d.i18n.fill_required, 'error'); return; }
+        if (!firstName || !lastName || !email || !phone || !contact_method) { showMessage($feedback, d.i18n.fill_required, 'error'); return; }
+        if (!isValidPhone(phone)) { showMessage($feedback, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
+        if (travelers < 1) { showMessage($feedback, d.i18n.invalid_travelers || 'Number of travelers must be at least 1.', 'error'); return; }
 
         $(this).prop('disabled', true);
         $.post(d.ajax_url, {
@@ -113,11 +131,11 @@
         if (date.indexOf(' to ') !== -1) {
             var parts = date.split(' to ');
 
-            var formatDate = function (dateStr) {
+              var formatDate = function (dateStr) {
                 var d = new Date(dateStr);
-                var month = d.getMonth() + 1;         // No leading zero (m)
-                var day   = d.getDate();               // No leading zero (d)
-                var year  = d.getFullYear();           // 4-digit year (Y)
+                var month = String(d.getMonth() + 1).padStart(2, '0');  // Leading zero (MM)
+                var day   = String(d.getDate()).padStart(2, '0');         // Leading zero (DD)
+                var year  = d.getFullYear();                              // 4-digit year (YYYY)
                 return month + '/' + day + '/' + year;
             };
 
@@ -143,7 +161,9 @@
         var contact_method = $('#wctb-inq-contact-method').val().trim();
         var announcements = $('#wctb-inq-announcements').is(':checked');
 
-        if (!firstName || !lastName || !email) { showMessage($msg, d.i18n.fill_required, 'error'); return; }
+        if (!firstName || !lastName || !email || !phone || !contact_method) { showMessage($msg, d.i18n.fill_required, 'error'); return; }
+        if (!isValidPhone(phone)) { showMessage($msg, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
+        if (travelers < 1) { showMessage($msg, d.i18n.invalid_travelers || 'Number of travelers must be at least 1.', 'error'); return; }
 
         $(this).prop('disabled', true);
         $.post(d.ajax_url, {
@@ -184,6 +204,7 @@
         var phone         = $('#wctb-cj-phone').val().trim();
         var contactMethod = $('#wctb-cj-contact-method').val().trim();
         var destination   = $('#wctb-cj-destination').val().trim();
+        var email = $('#wctb-cj-email').val().trim();
         var priorities    = $('#wctb-cj-priorities').val().trim();
         var travelStyle   = $('#wctb-cj-travel-style').val().trim();
         var budget        = $('#wctb-cj-budget').val().trim();
@@ -193,10 +214,15 @@
         var travelDate    = $('#wctb-cj-travel-date').val();
         var $msg          = $('#wctb-cj-message-feedback');
 
-        if (!firstName || !lastName || !phone || !contactMethod || !destination) {
+        if (!firstName || !lastName || !phone || !contactMethod || !destination || !email || !travelers || !budget || !travelWhen || !notes ) {
             showMessage($msg, d.i18n.fill_required, 'error');
             return;
         }
+
+          if (!isValidPhone(phone)) { showMessage($msg, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
+
+          if (travelers < 1) { showMessage($msg, d.i18n.invalid_travelers || 'Number of travelers must be at least 1.', 'error'); return; }
+
 
         $(this).prop('disabled', true);
         $.post(d.ajax_url, {
@@ -215,6 +241,7 @@
             travel_when:     travelWhen,
             notes:           notes,
             travel_date:     travelDate,
+            email:           email
         }, function (r) {
             showMessage($msg, r.data.message, r.success ? 'success' : 'error');
             // empty value

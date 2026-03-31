@@ -225,6 +225,7 @@ function wctb_cj_details_meta_box( $post ) {
     $fields = [
         'wctb_cj_first_name'     => [ __( 'First Name',                     'wc-tour-booking' ), 'text'     ],
         'wctb_cj_last_name'      => [ __( 'Last Name',                      'wc-tour-booking' ), 'text'     ],
+        'wctb_cj_email'      => [ __( 'Email Address',                      'wc-tour-booking' ), 'text'     ],
         'wctb_cj_phone'          => [ __( 'Phone Number',                   'wc-tour-booking' ), 'text'     ],
         'wctb_cj_contact_method' => [ __( 'Method of Contact',              'wc-tour-booking' ), 'text'     ],
         'wctb_cj_destination'    => [ __( 'Where would you like to travel?', 'wc-tour-booking' ), 'text'     ],
@@ -291,7 +292,7 @@ function wctb_cj_save_meta_box( $post_id, $post ) {
     if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) return;
     if ( ! current_user_can( 'edit_post', $post_id ) ) return;
 
-    $text_fields     = [ 'wctb_cj_first_name', 'wctb_cj_last_name', 'wctb_cj_phone',
+    $text_fields     = [ 'wctb_cj_email','wctb_cj_first_name', 'wctb_cj_last_name', 'wctb_cj_phone',
                           'wctb_cj_contact_method', 'wctb_cj_destination',
                           'wctb_cj_budget', 'wctb_cj_travel_when', 'wctb_cj_travel_date' ];
     $textarea_fields = [ 'wctb_cj_priorities', 'wctb_cj_travel_style', 'wctb_cj_notes' ];
@@ -317,6 +318,7 @@ function wctb_handle_custom_journey_submit() {
 
     $product_id     = absint(                  $_POST['product_id']     ?? 0  );
     $first_name     = sanitize_text_field(     $_POST['first_name']     ?? '' );
+    $email          = sanitize_email(           $_POST['email'] ?? '' );
     $last_name      = sanitize_text_field(     $_POST['last_name']      ?? '' );
     $phone          = sanitize_text_field(     $_POST['phone']          ?? '' );
     $contact_method = sanitize_text_field(     $_POST['contact_method'] ?? '' );
@@ -348,6 +350,7 @@ function wctb_handle_custom_journey_submit() {
 
     $meta = [
         '_wctb_cj_first_name'     => $first_name,
+        '_wctb_cj_email'          => $email,
         '_wctb_cj_last_name'      => $last_name,
         '_wctb_cj_phone'          => $phone,
         '_wctb_cj_contact_method' => $contact_method,
@@ -365,19 +368,7 @@ function wctb_handle_custom_journey_submit() {
         update_post_meta( $post_id, $key, $value );
     }
 
-    // Notify admin
-    /*
-    wp_mail(
-        get_option( 'admin_email' ),
-        sprintf( __( '[%s] New Custom Journey Request – %s', 'wc-tour-booking' ), get_bloginfo( 'name' ), "{$first_name} {$last_name}" ),
-        sprintf(
-            "Name: %s %s\nPhone: %s\nContact: %s\nDestination: %s\nPriorities: %s\nTravel Style: %s\nBudget: %s\nTravelers: %d\nTravel When: %s\nNotes: %s\nTravel Date: %s\nTour: %s\n\nManage: %s",
-            $first_name, $last_name, $phone, $contact_method, $destination,
-            $priorities, $travel_style, $budget, $travelers, $travel_when,
-            $notes, $travel_date, $tour_name,
-            admin_url( 'edit.php?post_type=wctb_custom_journey' )
-        )
-    );*/
+    // Notify admin  
 
     $mailer = WC()->mailer();
 

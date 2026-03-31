@@ -173,6 +173,18 @@ body.wctb-modal-open {
     overflow: hidden;
 }
 
+body.wctb-modal-open::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    pointer-events: none;
+    z-index: 99999;
+}
+
 .wctb-modal {
     position: fixed;
     inset: 0;
@@ -182,17 +194,31 @@ body.wctb-modal-open {
     justify-content: center;
 }
 
+.wctb-modal::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.01); /* Safari fallback so backdrop-filter paints immediately */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: backdrop-filter;
+    z-index: 0;
+}
+
 .wctb-modal__overlay {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.68);
-    backdrop-filter: blur(2px);
+    z-index: 1;
 }
 
 .wctb-modal__content {
     position: relative;
+    z-index: 2;
     background: #fff;
-    padding: 32px 36px;
+    padding: 80px 36px;
     width: 90%;
     max-width: 1004px;
     height: 100vh;
@@ -203,6 +229,11 @@ body.wctb-modal-open {
 .wctb-modal__content p,
 .wctb-modal__content p + p {
     margin-top: 20px;
+}
+
+.wctb-modal__content .place-date-wrapper p,
+.wctb-modal__content .place-date-wrapper p + p {
+    margin-top: 0px;
 }
 
 .wctb-modal__close {
@@ -260,6 +291,10 @@ body.wctb-modal-open {
     font-weight: 500;
 }
 
+.wctb-modal__content .custom-form-wrapper.your-details-wrapper::before {
+    content: "YOUR DETAILS";
+}
+
 /* ===== Optional: match clean luxury style ===== */
 .wctb-modal__content .custom-form-wrapper {
     border-color: #ddd;
@@ -278,8 +313,18 @@ body.wctb-modal-open {
     gap: 12px;
 }
 
+.wctb-form-row.email-row {
+    grid-template-columns: 1fr;
+}
+
 @media (max-width: 480px) {
-    .wctb-form-row { grid-template-columns: 1fr; }
+    .wctb-form-row {
+        grid-template-columns: 1fr; 
+    }
+
+    .wctb-modal__content {
+        padding: 40px 20px;
+    }
 }
 
 .wctb-form-group {
