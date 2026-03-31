@@ -6,6 +6,7 @@
     'use strict';
 
     var d = wctb_data;
+    var itiWL, itiInq,iticj;
 
     /* ─── Helpers ─────────────────────────────────────────────────── */
     function showModal(id) { 
@@ -25,8 +26,9 @@
            .addClass('wctb-message--' + type).html(msg).show();
     }
 
-    function isValidPhone(phone) {
-        // Allow digits, spaces, +, -, (, ) — min 7 digits
+    function isValidPhone(iti, phone) {
+        if (iti) return iti.isValidNumber();
+        // Fallback if library not loaded
         var digits = phone.replace(/\D/g, '');
         return /^[0-9+\-\s().]+$/.test(phone) && digits.length >= 7 && digits.length <= 15;
     }
@@ -81,7 +83,7 @@
         var firstName = $('#wctb-wl-first-name').val().trim();
         var lastName  = $('#wctb-wl-last-name').val().trim();
         var email     = $('#wctb-wl-email').val().trim();
-        var phone     = $('#wctb-wl-phone').val().trim();
+        var phone     = itiWL ? itiWL.getNumber() : $('#wctb-wl-phone').val().trim();
         var travelers = parseInt($('#wctb-wl-travelers').val()) || 1;
         var message   = $('#wctb-wl-message-text').val().trim();
         var date      = $('#wctb-waitlist-date').val();
@@ -89,10 +91,10 @@
         var contact_method = $('#wctb-wl-contact-method').val().trim();
         var announcements = $('#wctb-wl-announcements').is(':checked');
 
-
-
-        if (!firstName || !lastName || !email || !phone || !contact_method) { showMessage($feedback, d.i18n.fill_required, 'error'); return; }
-        if (!isValidPhone(phone)) { showMessage($feedback, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
+        if (!firstName || !lastName || !email || !phone || !contact_method) { 
+            showMessage($feedback, d.i18n.fill_required, 'error'); return; 
+        }
+        if (!isValidPhone(itiWL, phone)) { showMessage($feedback, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
         if (travelers < 1) { showMessage($feedback, d.i18n.invalid_travelers || 'Number of travelers must be at least 1.', 'error'); return; }
 
         $(this).prop('disabled', true);
@@ -153,7 +155,7 @@
         var firstName = $('#wctb-inq-first-name').val().trim();
         var lastName  = $('#wctb-inq-last-name').val().trim();
         var email     = $('#wctb-inq-email').val().trim();
-        var phone     = $('#wctb-inq-phone').val().trim();
+        var phone     = itiInq ? itiInq.getNumber() : $('#wctb-inq-phone').val().trim();
         var travelers = parseInt($('#wctb-inq-travelers').val()) || 1;
         var message   = $('#wctb-inq-message').val().trim();
         var date      = $('#wctb-inquiry-date').val();
@@ -162,7 +164,7 @@
         var announcements = $('#wctb-inq-announcements').is(':checked');
 
         if (!firstName || !lastName || !email || !phone || !contact_method) { showMessage($msg, d.i18n.fill_required, 'error'); return; }
-        if (!isValidPhone(phone)) { showMessage($msg, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
+        if (!isValidPhone(itiInq, phone)) { showMessage($msg, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
         if (travelers < 1) { showMessage($msg, d.i18n.invalid_travelers || 'Number of travelers must be at least 1.', 'error'); return; }
 
         $(this).prop('disabled', true);
@@ -201,7 +203,8 @@
     $(document).on('click', '#wctb-cj-submit', function () {
         var firstName     = $('#wctb-cj-first-name').val().trim();
         var lastName      = $('#wctb-cj-last-name').val().trim();
-        var phone         = $('#wctb-cj-phone').val().trim();
+       // var phone         = $('#wctb-cj-phone').val().trim();
+        var phone     = iticj ? iticj.getNumber() : $('#wctb-cj-phone').val().trim();
         var contactMethod = $('#wctb-cj-contact-method').val().trim();
         var destination   = $('#wctb-cj-destination').val().trim();
         var email = $('#wctb-cj-email').val().trim();
@@ -219,7 +222,8 @@
             return;
         }
 
-          if (!isValidPhone(phone)) { showMessage($msg, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
+        if (!isValidPhone(iticj, phone)) { showMessage($msg, d.i18n.invalid_phone || 'Please enter a valid phone number.', 'error'); return; }
+           
 
           if (travelers < 1) { showMessage($msg, d.i18n.invalid_travelers || 'Number of travelers must be at least 1.', 'error'); return; }
 
@@ -252,6 +256,23 @@
         }).always(function () {
             $('#wctb-cj-submit').prop('disabled', false);
         });
+    });
+
+    /* ─── Phone: intl-tel-input ──────────────────────────────────── */
+    $(function () {
+        var opts = {
+            initialCountry:   'us',
+            separateDialCode: true,
+        };
+        var wlPhone  = document.getElementById('wctb-wl-phone');
+        var inqPhone = document.getElementById('wctb-inq-phone');
+        var cjPhone = document.getElementById('wctb-cj-phone');
+
+        if (window.intlTelInput) {
+            if (wlPhone)  itiWL  = window.intlTelInput(wlPhone,  opts);
+            if (inqPhone) itiInq = window.intlTelInput(inqPhone, opts);
+            if (cjPhone) iticj = window.intlTelInput(cjPhone, opts);
+        }
     });
 
     /* ─── Close modals ────────────────────────────────────────────── */

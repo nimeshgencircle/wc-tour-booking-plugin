@@ -16,7 +16,9 @@ function wctb_enqueue_assets() {
 
     // ── Product page JS ──
     if ( is_product() ) {
-        wp_enqueue_script( 'wctb-frontend', WCTB_URL . 'assets/js/frontend.js', [ 'jquery' ], WCTB_VERSION, true );
+        wp_enqueue_style( 'wctb-intl-tel-input', WCTB_URL . 'assets/intl-tel-input/css/intlTelInput.min.css', [], '25.3.1' );
+        wp_enqueue_script( 'wctb-intl-tel-input', WCTB_URL . 'assets/intl-tel-input/js/intlTelInputWithUtils.min.js', [], '25.3.1', true );
+        wp_enqueue_script( 'wctb-frontend', WCTB_URL . 'assets/js/frontend.js', [ 'jquery', 'wctb-intl-tel-input' ], WCTB_VERSION, true );
 
         global $post;
         $product_id = $post->ID;
@@ -391,7 +393,7 @@ function wctb_render_waitlist_popup( $product_id ) { ?>
             <div class="wctb-form-row">
                 <div class="wctb-form-group"><label class="hidden-label"
                         for="wctb-wl-phone"><?php esc_html_e( 'Phone Number *', 'wc-tour-booking' ); ?></label><input
-                        type="tel" id="wctb-wl-phone" class="wctb-input" placeholder="Phone Number *"></div>
+                        type="tel" id="wctb-wl-phone" placeholder="Phone Number *"></div>
 
                 <div class="wctb-form-group">
                     <label for="wctb-wl-contact-method"
@@ -497,7 +499,7 @@ function wctb_render_inquiry_popup( $product_id ) { ?>
             <div class="wctb-form-row">
                 <div class="wctb-form-group"><label class="hidden-label"
                         for="wctb-inq-phone"><?php esc_html_e( 'Phone Number *', 'wc-tour-booking' ); ?></label><input
-                        type="tel" id="wctb-inq-phone" placeholder="Phone Number *" class="wctb-input" required></div>
+                        type="tel" id="wctb-inq-phone" placeholder="Phone Number *" required></div>
 
                 <div class="wctb-form-group">
                     <label class="hidden-label"
