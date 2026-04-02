@@ -235,9 +235,8 @@ function wctb_render_tour_button() {
         echo '<div class="wctb-date-list-row">';
         echo '<span class="wctb-date-list-label">' . esc_html( $label ) . '</span>';
 
-        $arrow_img = '<img src="'.WCTB_URL . 'assets/images/book-arrow.svg" alt="arrow" />
-';
-
+      //  $arrow_img = '<img src="'.WCTB_URL . 'assets/images/book-arrow.svg" alt="arrow" />';
+        $arrow_img = '';
         switch ( $btn_type ) {
             case 'book_now':
                 printf(
@@ -310,7 +309,10 @@ function wctb_render_tour_button() {
     if (!empty($location)) {
         echo '<div class="trip-detail-col">';
         echo '<p class="trip-title">' . esc_html__('Destination', 'wc-tour-booking') . '</p>';
-        echo '<p>' . esc_html($location[0]) . '</p>';
+        foreach ( $location as $loc ) {
+            echo '<p>' . esc_html($loc) . '</p>';
+        }
+        //echo '<p>' . esc_html( implode(", ", $location)) . '</p>';
         echo '</div>';
     }
 
