@@ -272,6 +272,18 @@
             if (wlPhone)  itiWL  = window.intlTelInput(wlPhone,  opts);
             if (inqPhone) itiInq = window.intlTelInput(inqPhone, opts);
             if (cjPhone) iticj = window.intlTelInput(cjPhone, opts);
+
+             // Allow only numbers and "-"
+            wlPhone.addEventListener("input", function (e) {           
+                this.value = this.value.replace(/[^0-9-]/g, "");
+            });
+            inqPhone.addEventListener("input", function (e) {           
+                this.value = this.value.replace(/[^0-9-]/g, "");
+            });
+            cjPhone.addEventListener("input", function (e) {           
+                this.value = this.value.replace(/[^0-9-]/g, "");
+            });
+
         }
     });
 

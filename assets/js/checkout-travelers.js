@@ -520,7 +520,7 @@
                     '<label class="wctb-co-label" for="wctb-em-' + pid + '-' + idx + '">' + i18n.email + ' <span class="req">*</span></label>' +
                     '<input type="email" id="wctb-em-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-email" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
-                           'value="' + escAttr(saved.email || '') + '" ' +
+                           'value="' + escAttr(saved.email || '') + ' *" ' +
                            'placeholder="' + escAttr(i18n.email) + ' *" autocomplete="email" />' +
                 '</div>' +
                 '<div class="wctb-co-field">' +
