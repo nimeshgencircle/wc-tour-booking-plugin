@@ -60,7 +60,11 @@ function wctb_enqueue_assets() {
 
     // ── Checkout page JS (regular checkout + order-pay) ──
     if ( is_checkout() ) {
-        wp_enqueue_script( 'wctb-checkout', WCTB_URL . 'assets/js/checkout-travelers.js', [ 'jquery', 'jquery-ui-datepicker' ], WCTB_VERSION, true );
+
+     wp_enqueue_style( 'wctb-intl-tel-input', WCTB_URL . 'assets/intl-tel-input/css/intlTelInput.min.css', [], '25.3.1' );
+        wp_enqueue_script( 'wctb-intl-tel-input', WCTB_URL . 'assets/intl-tel-input/js/intlTelInputWithUtils.min.js', [], '25.3.1', true );
+        
+        wp_enqueue_script( 'wctb-checkout', WCTB_URL . 'assets/js/checkout-travelers.js', [ 'jquery', 'jquery-ui-datepicker','wctb-intl-tel-input' ], WCTB_VERSION, true );
 
         $tour_items   = [];
         $is_order_pay = wctb_is_order_pay_page();
@@ -421,10 +425,10 @@ function wctb_render_waitlist_popup( $product_id ) { ?>
         </div>
         <div class="additional-form-wrapper">
             <div class="wctb-form-group">
-                <label class="hidden-label"
+                <label class="hidden-label-"
                     for="wctb-wl-travelers"><?php esc_html_e( 'How many people are traveling?  *', 'wc-tour-booking' ); ?></label><input
                     type="number" id="wctb-wl-travelers" class="wctb-input"
-                    placeholder="How many people are traveling? *" min="1" value="1" required></div>
+                    placeholder="How many people are traveling? *" min="1" value="" required></div>
             <div class="wctb-form-group"><label
                     for="wctb-wl-message-text"><?php esc_html_e( 'Is there anything you would like us to know?', 'wc-tour-booking' ); ?>
                     <span class="required-icon">*</span></label><textarea id="wctb-wl-message-text"
@@ -526,10 +530,10 @@ function wctb_render_inquiry_popup( $product_id ) { ?>
         </div>
         <div class="additional-form-wrapper">
             <div class="wctb-form-group">
-                <label class="hidden-label"
+                <label class="hidden-label-"
                     for="wctb-inq-travelers"><?php esc_html_e( 'How many people are traveling?  *', 'wc-tour-booking' ); ?></label><input
                     type="number" id="wctb-inq-travelers" class="wctb-input"
-                    placeholder="How many people are traveling? *" min="1" value="1" required></div>
+                    placeholder="How many people are traveling? *" min="1" value="" required></div>
             <div class="wctb-form-group"><label
                     for="wctb-inq-message"><?php esc_html_e( 'Is there anything you would like us to know?', 'wc-tour-booking' ); ?></label><textarea
                     id="wctb-inq-message" class="wctb-textarea" rows="3"
@@ -628,7 +632,7 @@ function wctb_render_custom_journey_popup( $product_id ) { ?>
                 <div class="wctb-form-group">
                     <label for="wctb-cj-travelers"><?php esc_html_e( 'Travelers', 'wc-tour-booking' ); ?> <span
                             class="required-icon">*</span></label><input type="number" id="wctb-cj-travelers"
-                        class="wctb-input" min="1" value="1" required></div>
+                        class="wctb-input" min="1" value="" required></div>
             </div>
             <div class="wctb-form-group">
                 <label

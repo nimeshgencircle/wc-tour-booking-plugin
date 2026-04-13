@@ -513,7 +513,7 @@
                         '<input type="text" id="wctb-dob-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-dob" ' +
                                'data-pid="' + pid + '" data-idx="' + idx + '" ' +
                                'value="' + escAttr(saved.dob || '') + '" ' +
-                               'placeholder="YYYY/DD/MM" readonly />' +
+                               'placeholder="MM/DD/YYYY" readonly />' +
                     '</div>' +
                 '</div>' +
                 '<div class="wctb-co-field">' +
@@ -589,7 +589,7 @@
             var idx    = parseInt($input.data('idx'));
 
             $input.datepicker({
-                dateFormat:   'yy/dd/mm',
+                dateFormat:   'mm/dd/yy',
                 changeMonth:  true,
                 changeYear:   true,
                 yearRange:    '-100:+0',
@@ -603,7 +603,7 @@
             });
         });
     }
-
+ 
     /* ── Render all sections ──────────────────────────────────────── */
 
     function renderAll() {
@@ -834,7 +834,7 @@
             var count    = state[pid].count;
             var travelers = state[pid].travelers;
 
-            var dobRegex = /^\d{4}\/\d{2}\/\d{2}$/;
+            var dobRegex = /^\d{2}\/\d{2}\/\d{4}$/;
             for (var j = 0; j < count; j++) {
                 var t = travelers[j] || {};
                 if (!t.first_name || !t.last_name || !t.email) {
@@ -871,5 +871,10 @@
     $(function () {
         renderAll();
     });
+
+
+   
+
+
 
 })(jQuery);

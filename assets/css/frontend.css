@@ -220,9 +220,10 @@ body.wctb-modal-open::before {
     padding: 80px 36px;
     width: 90%;
     max-width: 1004px;
-    height: 100vh;
+    height: 86vh;
     overflow-y: auto;
     box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    transform: translateY(40px);
 }
 
 .wctb-modal__content p,
@@ -447,14 +448,14 @@ body.wctb-modal-open::before {
 }
 
 .wctb-message--success {
-    background: #d4edda;
-    color: #155724;
+    background: #c8986e;
+    color: #000;
     border: 1px solid #c3e6cb;
 }
 
 .wctb-message--error {
-    background: #f8d7da;
-    color: #721c24;
+    background: #c8986e;
+    color: #000;
     border: 1px solid #f5c6cb;
 }
 
