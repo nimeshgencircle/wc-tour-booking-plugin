@@ -428,7 +428,7 @@ function wctb_render_waitlist_popup( $product_id ) { ?>
                 <label class="hidden-label-"
                     for="wctb-wl-travelers"><?php esc_html_e( 'How many people are traveling?  *', 'wc-tour-booking' ); ?></label><input
                     type="number" id="wctb-wl-travelers" class="wctb-input"
-                    placeholder="How many people are traveling? *" min="1" value="" required></div>
+                    placeholder="" min="1" value="" required></div>
             <div class="wctb-form-group"><label
                     for="wctb-wl-message-text"><?php esc_html_e( 'Is there anything you would like us to know?', 'wc-tour-booking' ); ?>
                     <span class="required-icon">*</span></label><textarea id="wctb-wl-message-text"
@@ -533,7 +533,7 @@ function wctb_render_inquiry_popup( $product_id ) { ?>
                 <label class="hidden-label-"
                     for="wctb-inq-travelers"><?php esc_html_e( 'How many people are traveling?  *', 'wc-tour-booking' ); ?></label><input
                     type="number" id="wctb-inq-travelers" class="wctb-input"
-                    placeholder="How many people are traveling? *" min="1" value="" required></div>
+                    placeholder="" min="1" value="" required></div>
             <div class="wctb-form-group"><label
                     for="wctb-inq-message"><?php esc_html_e( 'Is there anything you would like us to know?', 'wc-tour-booking' ); ?></label><textarea
                     id="wctb-inq-message" class="wctb-textarea" rows="3"

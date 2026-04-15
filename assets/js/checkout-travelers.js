@@ -520,7 +520,7 @@
                     '<label class="wctb-co-label" for="wctb-em-' + pid + '-' + idx + '">' + i18n.email + ' <span class="req">*</span></label>' +
                     '<input type="email" id="wctb-em-' + pid + '-' + idx + '" class="wctb-co-input wctb-t-email" ' +
                            'data-pid="' + pid + '" data-idx="' + idx + '" ' +
-                           'value="' + escAttr(saved.email || '') + ' *" ' +
+                           'value="' + escAttr(saved.email || '') + ' " ' +
                            'placeholder="' + escAttr(i18n.email) + ' *" autocomplete="email" />' +
                 '</div>' +
                 '<div class="wctb-co-field">' +
@@ -577,6 +577,26 @@
         $('#wctb-legend-' + pid).html(buildRoomLegend(pid, state[pid].count));
     }
 
+    /* ── Traveler phone inputs ────────────────────────────────────── */
+
+    var phoneOpts = {
+        initialCountry:   'us',
+        separateDialCode: true,
+    };
+
+    function initPhoneInputs() {
+        if (!window.intlTelInput) return;
+        $('.wctb-t-phone').each(function () {
+            var $input = $(this);
+            if ($input.data('iti')) return; // already initialised
+            var iti = window.intlTelInput(this, phoneOpts);
+            $input.data('iti', iti);
+            this.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9-]/g, '');
+            });
+        });
+    }
+
     /* ── Date picker ──────────────────────────────────────────────── */
 
     function initDatepickers() {
@@ -627,6 +647,7 @@
         $wrap.html(html);
         serializeToHidden();
         initDatepickers();
+        initPhoneInputs();
 
         // Refresh pricing display now that solo-single state is set
         c.tour_items.forEach(function (tour) {
@@ -650,7 +671,9 @@
                 state[pid].travelers[i].gender     = $b.find('.wctb-t-gender:checked').val() || '';
                 state[pid].travelers[i].dob        = $b.find('.wctb-t-dob').val()        || '';
                 state[pid].travelers[i].email      = $b.find('.wctb-t-email').val()       || '';
-                state[pid].travelers[i].phone      = $b.find('.wctb-t-phone').val()       || '';
+                var $phoneEl = $b.find('.wctb-t-phone');
+                var itiInst  = $phoneEl.data('iti');
+                state[pid].travelers[i].phone = itiInst ? itiInst.getNumber() : ($phoneEl.val() || '');
                 // room_type is managed by applyRoomCascade, only read if not already set
                 if (!state[pid].travelers[i].room_type) {
                     state[pid].travelers[i].room_type = $b.find('.wctb-co-room').val() || 'shared';
@@ -704,6 +727,7 @@
         }
         $forms.html(html);
         initDatepickers();
+        initPhoneInputs();
 
         // Re-apply cascade for all paired travelers after count change
         // (skip the solo last traveler — enforceSoloSingle already handled it)
@@ -874,7 +898,28 @@
 
 
    
+var opts = {
+        initialCountry:   'us',
+        separateDialCode: true,
+    };
 
+     var itibp;
+    var billing_phone = document.getElementById('billing_phone');
+
+    if (window.intlTelInput && billing_phone) {
+        itibp = window.intlTelInput(billing_phone, opts);
+        billing_phone.addEventListener("input", function (e) {
+            this.value = this.value.replace(/[^0-9-]/g, "");
+        });
+    }
+
+    // Inject full international number (dial code + local number) before WooCommerce submits the order
+    $('form.checkout').on('checkout_place_order', function () {
+        if (itibp && billing_phone) {
+            billing_phone.value = itibp.getNumber();
+        }
+        return true;
+    });
 
 
 })(jQuery);
